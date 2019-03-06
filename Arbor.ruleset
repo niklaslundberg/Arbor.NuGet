@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<RuleSet Name="Rules for Arbor" Description="Code analysis rules for Arbox" ToolsVersion="14.0">
+  <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+  </Rules>
+
+  <Rules AnalyzerId="CA" RuleNamespace="CA">
+       <Rule Id="CA2007" Action="None" />
+  </Rules>
+</RuleSet>
