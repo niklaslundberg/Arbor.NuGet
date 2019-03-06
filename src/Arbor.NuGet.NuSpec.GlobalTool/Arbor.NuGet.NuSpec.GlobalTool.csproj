@@ -8,6 +8,9 @@
     <AssemblyName>dotnet-arbor-nuget</AssemblyName>
     <LangVersion>latest</LangVersion>
     <CodeAnalysisRuleSet>..\..\Arbor.ruleset</CodeAnalysisRuleSet>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/niklaslundberg/Arbor.NuGet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
