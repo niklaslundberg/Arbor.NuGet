@@ -17,6 +17,8 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 {
     public class NuSpecCreator
     {
+        private const string NuSpecFileExtension = ".nuspec";
+
         private readonly ILogger _logger;
 
         public NuSpecCreator(ILogger logger)
@@ -48,6 +50,19 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
             if (!packageDirectory.Exists)
             {
+                _logger.Error("The source directory '{Directory}' does not exist", packageDirectory.FullName);
+                return ExitCode.Failure;
+            }
+
+            if (!Path.HasExtension(packageConfiguration.OutputFile))
+            {
+                _logger.Error("The output file is missing extension");
+                return ExitCode.Failure;
+            }
+
+            if (!Path.GetExtension(packageConfiguration.OutputFile).Equals(NuSpecFileExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.Error("The output file must have the extension {Extension}", NuSpecFileExtension);
                 return ExitCode.Failure;
             }
 
@@ -70,6 +85,8 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
                 fileList.Select(file => NuSpecHelper.IncludedFile(file.FullName, packageDirectory.FullName)));
 
             var targetDirectory = new FileInfo(packageConfiguration.OutputFile).Directory;
+
+            targetDirectory.EnsureExists();
 
             var contentFilesInfo = ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory);
 

@@ -49,9 +49,15 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                     return Task.FromResult(4);
                 }
 
+                if (!SemanticVersion.TryParse(packageVersion, out SemanticVersion version))
+                {
+                    logger.Error("Invalid semver '{PackageVersion}'", packageVersion);
+                    return Task.FromResult(5);
+                }
+
                 var packageDefinition = new PackageDefinition(
                     new PackageId(packageId),
-                    SemanticVersion.Parse(packageVersion));
+                    version);
 
                 return NuSpecCreator.CreateSpecificationAsync(
                     packageDefinition,
