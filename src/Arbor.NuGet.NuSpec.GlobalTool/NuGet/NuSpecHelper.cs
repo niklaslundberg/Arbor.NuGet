@@ -1,31 +1,34 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 {
     public static class NuSpecHelper
     {
-        public static string IncludedFile([NotNull] string fileName, [NotNull] string baseDirectory)
+        public static string IncludedFile([NotNull] UPath fileName, [NotNull] UPath baseDirectory)
         {
-            if (string.IsNullOrWhiteSpace(fileName))
+            if (fileName.IsNull ||
+                fileName.IsEmpty)
             {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(fileName));
+                throw new ArgumentException("Path cannot be null or empty.", nameof(fileName));
             }
 
-            if (string.IsNullOrWhiteSpace(baseDirectory))
+            if (baseDirectory.IsNull ||
+                baseDirectory.IsEmpty)
             {
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(baseDirectory));
             }
 
-            if (!fileName.StartsWith(baseDirectory, StringComparison.OrdinalIgnoreCase))
+            if (!fileName.FullName.StartsWith(baseDirectory.FullName, StringComparison.OrdinalIgnoreCase))
             {
                 throw new ArgumentException(
                     $"The file must {fileName} be in base directory {baseDirectory}",
                     nameof(fileName));
             }
 
-            int baseDirLength = baseDirectory.Length;
-            string targetFilePath = fileName[baseDirLength..];
+            int baseDirLength = baseDirectory.FullName.Length;
+            var targetFilePath = new UPath(fileName.FullName[baseDirLength..]);
 
             string fileItem = $@"<file src=""{fileName}"" target=""Content\{targetFilePath}"" />";
 

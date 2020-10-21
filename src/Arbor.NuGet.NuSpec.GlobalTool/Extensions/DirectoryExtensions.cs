@@ -1,11 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Extensions
 {
     public static class DirectoryExtensions
     {
-        public static void DeleteIfExists(this DirectoryInfo directoryInfo, bool recursive = true)
+        public static void DeleteIfExists(this DirectoryEntry? directoryInfo, bool recursive = true)
         {
             try
             {
@@ -14,15 +16,13 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Extensions
                     return;
                 }
 
-                directoryInfo.Refresh();
-
                 if (directoryInfo.Exists)
                 {
-                    FileInfo[] fileInfos;
+                    FileEntry[] fileInfos;
 
                     try
                     {
-                        fileInfos = directoryInfo.GetFiles();
+                        fileInfos = directoryInfo.EnumerateFiles().ToArray();
                     }
                     catch (Exception ex)
                     {
@@ -55,20 +55,16 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Extensions
                         }
                     }
 
-                    foreach (var subDirectory in directoryInfo.GetDirectories())
+                    foreach (var subDirectory in directoryInfo.EnumerateDirectories())
                     {
                         subDirectory.DeleteIfExists(recursive);
                     }
                 }
 
-                directoryInfo.Refresh();
-
                 if (directoryInfo.Exists)
                 {
                     directoryInfo.Delete(recursive);
                 }
-
-                directoryInfo.Refresh();
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -81,7 +77,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Extensions
             }
         }
 
-        public static DirectoryInfo EnsureExists(this DirectoryInfo directoryInfo)
+        public static DirectoryEntry EnsureExists(this DirectoryEntry directoryInfo)
         {
             if (directoryInfo == null)
             {
@@ -90,8 +86,6 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Extensions
 
             try
             {
-                directoryInfo.Refresh();
-
                 if (!directoryInfo.Exists)
                 {
                     directoryInfo.Create();
@@ -103,8 +97,6 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Extensions
                     $"Could not create directory '{directoryInfo.FullName}', path length {directoryInfo.FullName.Length}",
                     ex);
             }
-
-            directoryInfo.Refresh();
 
             return directoryInfo;
         }

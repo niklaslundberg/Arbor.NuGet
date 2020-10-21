@@ -2,6 +2,27 @@
   "version": 1,
   "dependencies": {
     ".NETCoreApp,Version=v3.1": {
+      "Arbor.FS": {
+        "type": "Direct",
+        "requested": "[0.1.0, )",
+        "resolved": "0.1.0",
+        "contentHash": "UTSQCd+3kSXo8mnZLxZxs8BTHjGru8ue8+0oSHlX0iqD1qx/rxcnJBGHBhQyJxX35eTcQinLc60IUoMFGYp8NA==",
+        "dependencies": {
+          "zio": "0.8.0"
+        }
+      },
+      "Arbor.KVConfiguration.JsonConfiguration": {
+        "type": "Direct",
+        "requested": "[0.20.0, )",
+        "resolved": "0.20.0",
+        "contentHash": "0KDg6rLGIQQ1Kgg2KUUliFnZwgT5pRLTOfrkfGJD12gHrqC3sncpYu7JH73hvvSVx+ZRrfYwqOLksz/w+DA6yQ==",
+        "dependencies": {
+          "Arbor.KVConfiguration.Core": "[0.20.0]",
+          "Arbor.KVConfiguration.Schema": "[0.20.0]",
+          "Arbor.KVConfiguration.Schema.Json": "[0.20.0]",
+          "Newtonsoft.Json": "[12.0.1, 13.0.0)"
+        }
+      },
       "Arbor.Processing": {
         "type": "Direct",
         "requested": "[0.6.0, )",
@@ -96,6 +117,32 @@
           "Microsoft.CSharp": "4.4.1"
         }
       },
+      "Arbor.KVConfiguration.Core": {
+        "type": "Transitive",
+        "resolved": "0.20.0",
+        "contentHash": "Iht+cY8bGAfV6stITYZalIvPK0m7386P1OSTjsegyS6NUEqRX/a83959ijEs6fXJX8u1atFUmGI5eHIWRG+rZg==",
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "[3.0.0, 4.0.0)",
+          "System.Collections.Immutable": "[1.5.0, 2.0.0)"
+        }
+      },
+      "Arbor.KVConfiguration.Schema": {
+        "type": "Transitive",
+        "resolved": "0.20.0",
+        "contentHash": "ks6lFWUmbhqGz+Wldb2WaFiMjNIW37Tyg/CPpvF2vne+LBtcCWouv6lXQ6Zj/Cuctbj5pBl9jB5JrvoK5LB4iw==",
+        "dependencies": {
+          "Arbor.KVConfiguration.Core": "[0.20.0]"
+        }
+      },
+      "Arbor.KVConfiguration.Schema.Json": {
+        "type": "Transitive",
+        "resolved": "0.20.0",
+        "contentHash": "UGfTjrxSF4NPNdO8wTuBLTcQONyVfIA/TlM/ZTB2x6OT/ufh4CHMzdXf3VtIBaeoflbWkqyQ3t9FzXi/JyK2sQ==",
+        "dependencies": {
+          "Arbor.KVConfiguration.Core": "[0.20.0]",
+          "Newtonsoft.Json": "12.0.1"
+        }
+      },
       "Microsoft.CodeAnalysis.Analyzers": {
         "type": "Transitive",
         "resolved": "2.6.1",
@@ -165,6 +212,11 @@
         "type": "Transitive",
         "resolved": "4.4.1",
         "contentHash": "A5hI3gk6WpcBI0QGZY6/d5CCaYUxJgi7iENn1uYEng+Olo8RfI5ReGVkjXjeu3VR3srLvVYREATXa2M0X7FYJA=="
+      },
+      "Microsoft.Extensions.Primitives": {
+        "type": "Transitive",
+        "resolved": "3.0.0",
+        "contentHash": "6gwewTbmOh+ZVBicVkL1XRp79sx4O7BVY6Yy+7OYZdwn3pyOKe9lOam+3gXJ3TZMjhJZdV0Ub8hxHt2vkrmN5Q=="
       },
       "Microsoft.NetCore.Analyzers": {
         "type": "Transitive",
@@ -1250,6 +1302,11 @@
         "type": "Transitive",
         "resolved": "2.6.3",
         "contentHash": "6XuOLRMw2oBb1umBBXert8g2XBxeZiA4gVAK0UuytnJ9f7e6ZXkgop7JL52vCrx/qWAtxaeUiJBvx3cWaAC3mg=="
+      },
+      "Zio": {
+        "type": "Transitive",
+        "resolved": "0.8.0",
+        "contentHash": "K1uswTWdec+j6KJAXmi1WT2G1v4mxdP8ojNl/JLp9bVFAdQSNW1oMdUIVv5go1cKmcu6GJcgCJxNMP2uTSOZXg=="
       }
     }
   }

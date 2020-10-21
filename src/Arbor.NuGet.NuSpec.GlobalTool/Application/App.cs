@@ -8,6 +8,7 @@ using Arbor.NuGet.NuSpec.GlobalTool.CommandLine;
 using Arbor.NuGet.NuSpec.GlobalTool.Logging;
 using Arbor.Processing;
 using Serilog;
+using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Application
 {
@@ -16,17 +17,29 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Application
         private readonly string[] _args;
 
         private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly bool _leaveFileSystemOpen;
 
         private readonly ILogger _logger;
+        private readonly IFileSystem _fileSystem;
 
-        public App(string[] args, ILogger logger, CancellationTokenSource cancellationTokenSource)
+        public App(string[] args, ILogger logger, IFileSystem fileSystem, CancellationTokenSource cancellationTokenSource, bool leaveFileSystemOpen = false)
         {
             _args = args;
             _logger = logger;
+            _fileSystem = fileSystem;
             _cancellationTokenSource = cancellationTokenSource;
+            _leaveFileSystemOpen = leaveFileSystemOpen;
         }
 
-        public void Dispose() => _cancellationTokenSource.Dispose();
+        public void Dispose()
+        {
+            if (!_leaveFileSystemOpen)
+            {
+                _fileSystem.Dispose();
+            }
+
+            _cancellationTokenSource.Dispose();
+        }
 
         public async Task<ExitCode> ExecuteAsync()
         {
@@ -54,7 +67,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Application
         private Parser CreateParser()
         {
             var parser = new CommandLineBuilder()
-                .AddCommand(CommandDefinitions.Tool(_logger, _cancellationTokenSource.Token)).UseVersionOption()
+                .AddCommand(CommandDefinitions.Tool(_logger, _fileSystem, _cancellationTokenSource.Token)).UseVersionOption()
                 .UseHelp().UseParseDirective().UseDebugDirective().UseSuggestDirective().RegisterWithDotnetSuggest()
                 .UseParseErrorReporting().UseExceptionHandler().Build();
 

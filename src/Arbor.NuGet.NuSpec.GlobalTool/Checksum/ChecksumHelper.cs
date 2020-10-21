@@ -3,64 +3,67 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
+using Arbor.FS;
 using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
+using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Checksum
 {
     public static class ChecksumHelper
     {
-        public static FileListWithChecksumFile CreateFileListForDirectory(
-            [NotNull] DirectoryInfo baseDirectory,
-            DirectoryInfo targetDirectory)
+        public static async Task<FileListWithChecksumFile> CreateFileListForDirectory(
+            [NotNull] DirectoryEntry baseDirectory,
+            DirectoryEntry targetDirectory)
         {
             if (baseDirectory == null)
             {
                 throw new ArgumentNullException(nameof(baseDirectory));
             }
 
-            var files = baseDirectory.GetFiles("*", SearchOption.AllDirectories).OrderBy(file => file.FullName)
-                .Select(file => file.FullName).Select(
+            var files = baseDirectory.EnumerateFiles("*", SearchOption.AllDirectories).OrderBy(file => file.FullName)
+                .Select(file => file).Select(
                     file => new
                     {
-                        file = file[baseDirectory.FullName.Length..],
+                        file = file.FullName[baseDirectory.FullName.Length..],
                         sha512Base64Encoded = GetFileHashSha512Base64Encoded(file)
                     }).ToArray();
 
             string? json = JsonConvert.SerializeObject(new {files}, Formatting.Indented);
 
-            var tempDirectory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()))
+            var tempDirectory = new DirectoryEntry(baseDirectory.FileSystem, UPath.Combine(Path.GetTempPath().NormalizePath(), Guid.NewGuid().ToString()))
                 .EnsureExists();
 
-            string contentFilesFile = Path.Combine(tempDirectory.FullName, "contentFiles.json");
+            var contentFilesFile = new FileEntry(baseDirectory.FileSystem, UPath.Combine(tempDirectory.FullName, "contentFiles.json"));
 
-            File.WriteAllText(contentFilesFile, json, Encoding.UTF8);
+            await contentFilesFile.WriteAllTextAsync(json, Encoding.UTF8).ConfigureAwait(false);;
 
-            string contentFilesFileChecksum = GetFileHashSha512Base64Encoded(contentFilesFile);
+            string contentFilesFileChecksum = await GetFileHashSha512Base64Encoded(contentFilesFile).ConfigureAwait(false);;
 
-            string hashFile = Path.Combine(tempDirectory.FullName, "contentFiles.json.sha512");
+            FileEntry hashFile = new FileEntry(baseDirectory.FileSystem, UPath.Combine(tempDirectory.FullName, "contentFiles.json.sha512"));
 
-            File.WriteAllText(hashFile, contentFilesFileChecksum, Encoding.UTF8);
+            await hashFile.WriteAllTextAsync(contentFilesFileChecksum, Encoding.UTF8).ConfigureAwait(false);
 
-            string hashFileName = Path.GetFileName(hashFile);
-            string hashTargetPath = Path.Combine(targetDirectory.FullName, hashFileName);
-            File.Copy(hashFile, hashTargetPath);
+            string hashFileName = hashFile.Name;
+            var hashTargetPath = UPath.Combine(targetDirectory.FullName, hashFileName);
+            hashFile.CopyTo(hashTargetPath, true);
 
-            string contentFilesFileName = Path.GetFileName(contentFilesFile);
-            string contentFilesTargetPath = Path.Combine(targetDirectory.FullName, contentFilesFileName);
-            File.Copy(contentFilesFile, contentFilesTargetPath);
+            var contentFilesFileName = contentFilesFile.Name;
+            var contentFilesTargetPath = UPath.Combine(targetDirectory.FullName, contentFilesFileName);
+            contentFilesFile.CopyTo(contentFilesTargetPath, true);
 
             var fileListWithChecksumFile = new FileListWithChecksumFile(contentFilesFileName, hashFileName);
 
             return fileListWithChecksumFile;
         }
 
-        private static string GetFileHashSha512Base64Encoded(string fileName)
+        private static async Task<string> GetFileHashSha512Base64Encoded(FileEntry fileName)
         {
             using var hashAlgorithm = SHA512.Create();
 
-            using var fs = new FileStream(fileName, FileMode.Open);
+            await using var fs = fileName.Open(FileMode.Open, FileAccess.Read);
 
             byte[] fileHash = hashAlgorithm.ComputeHash(fs);
 

@@ -1,15 +1,18 @@
 ﻿using System;
 using System.IO;
+using Arbor.FS;
+using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
+using Zio;
 
 namespace Arbor.NuGet.Tests.Integration
 {
     internal sealed class TempDirectory : IDisposable
     {
-        private string? _directory;
+        private DirectoryEntry? _directory;
 
-        private TempDirectory(string directory) => _directory = directory;
+        private TempDirectory(DirectoryEntry directory) => _directory = directory;
 
-        public DirectoryInfo Directory
+        public DirectoryEntry Directory
         {
             get
             {
@@ -18,7 +21,7 @@ namespace Arbor.NuGet.Tests.Integration
                     throw new ObjectDisposedException(nameof(Directory));
                 }
 
-                return new DirectoryInfo(_directory!);
+                return _directory;
             }
         }
 
@@ -29,29 +32,29 @@ namespace Arbor.NuGet.Tests.Integration
                 return;
             }
 
-            if (System.IO.Directory.Exists(_directory))
-            {
-                System.IO.Directory.Delete(_directory, recursive: true);
-            }
-
+            var tmp = _directory;
             _directory = null;
+
+            tmp?.DeleteIfExists();
         }
 
-        public static TempDirectory Create()
+        public static TempDirectory Create(IFileSystem fileSystem)
         {
-            string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            var directory = UPath.Combine(Path.GetTempPath().NormalizePath(), Guid.NewGuid().ToString());
 
-            if (System.IO.Directory.Exists(directory))
+            if (fileSystem.DirectoryExists(directory))
             {
                 throw new InvalidOperationException("The temp directory already exists");
             }
 
-            if (!System.IO.Directory.Exists(directory))
+            if (!fileSystem.DirectoryExists(directory))
             {
-                System.IO.Directory.CreateDirectory(directory);
+                fileSystem.CreateDirectory(directory);
             }
 
-            return new TempDirectory(directory);
+            var directoryEntry = fileSystem.GetDirectoryEntry(directory);
+
+            return new TempDirectory(directoryEntry);
         }
     }
 }

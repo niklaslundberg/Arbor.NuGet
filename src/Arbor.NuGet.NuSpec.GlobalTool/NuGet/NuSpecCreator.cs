@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Arbor.FS;
 using Arbor.NuGet.NuSpec.GlobalTool.Checksum;
 using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
 using Arbor.Processing;
 using Serilog;
+using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 {
@@ -22,7 +24,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
         public static async Task<int> CreateSpecificationAsync(
             PackageDefinition packageDefinition,
             ILogger logger,
-            DirectoryInfo sourceDirectory,
+            DirectoryEntry sourceDirectory,
             string outputFile,
             CancellationToken cancellationToken)
         {
@@ -74,17 +76,17 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
             string? copyright = "Undefined";
             string? tags = string.Empty;
 
-            var fileList = packageDirectory.GetFiles("*", SearchOption.AllDirectories);
+            var fileList = packageDirectory.EnumerateFiles("*", SearchOption.AllDirectories);
 
             string? files = string.Join(
                 Environment.NewLine,
                 fileList.Select(file => NuSpecHelper.IncludedFile(file.FullName, packageDirectory.FullName)));
 
-            var targetDirectory = new FileInfo(packageConfiguration.OutputFile).Directory!;
+            var targetDirectory = new FileEntry(packageConfiguration.SourceDirectory.FileSystem, packageConfiguration.OutputFile).Directory!;
 
             targetDirectory.EnsureExists();
 
-            var contentFilesInfo = ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory);
+            var contentFilesInfo = await ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory).ConfigureAwait(false);
 
             string? contentFileListFile =
                 $@"<file src=""{contentFilesInfo.ContentFilesFile}"" target=""{contentFilesInfo.ContentFilesFile}"" />";
@@ -129,17 +131,18 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
             _logger.Information("{NuSpec}", nuspecContent);
 
-            var tempDir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), $"Arbor.NuGet_{DateTime.Now.Ticks}"))
+            var tempDir = new DirectoryEntry( packageConfiguration.SourceDirectory.FileSystem, UPath.Combine(Path.GetTempPath().NormalizePath(), $"Arbor.NuGet_{DateTime.Now.Ticks}"))
                 .EnsureExists();
 
-            string nuspecTempFile = Path.Combine(tempDir.FullName, $"{packageId}.nuspec");
+            var nuspecTempFile = UPath.Combine(tempDir.FullName, $"{packageId}.nuspec");
 
-            await File.WriteAllTextAsync(nuspecTempFile, nuspecContent, Encoding.UTF8, cancellationToken)
+            await tempDir.FileSystem.WriteAllTextAsync(nuspecTempFile, nuspecContent, Encoding.UTF8, cancellationToken)
                 .ConfigureAwait(continueOnCapturedContext: false);
 
-            File.Copy(nuspecTempFile, packageConfiguration.OutputFile);
+            var tempFile = tempDir.FileSystem.GetFileEntry(nuspecTempFile);
+            tempFile.CopyTo(packageConfiguration.OutputFile, true);
 
-            File.Delete(nuspecTempFile);
+            tempFile.Delete();
 
             tempDir.DeleteIfExists();
 

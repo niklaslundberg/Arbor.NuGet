@@ -1,5 +1,5 @@
-﻿using System.IO;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
+using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 {
@@ -7,7 +7,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
     {
         public NuGetPackageConfiguration(
             [NotNull] PackageDefinition packageDefinition,
-            [NotNull] DirectoryInfo sourceDirectory,
+            [NotNull] DirectoryEntry sourceDirectory,
             string outputFile)
         {
             PackageDefinition = packageDefinition;
@@ -19,6 +19,6 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
         [NotNull] public PackageDefinition PackageDefinition { get; }
 
-        [NotNull] public DirectoryInfo SourceDirectory { get; }
+        [NotNull] public DirectoryEntry SourceDirectory { get; }
     }
 }

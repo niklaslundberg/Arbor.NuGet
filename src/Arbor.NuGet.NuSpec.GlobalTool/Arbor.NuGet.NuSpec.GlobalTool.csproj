@@ -14,6 +14,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Arbor.FS" Version="0.1.0" />
+    <PackageReference Include="Arbor.KVConfiguration.JsonConfiguration" Version="0.20.0" />
     <PackageReference Include="Arbor.Processing" Version="0.6.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2018.3.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="2.10.0" />

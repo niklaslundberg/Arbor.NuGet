@@ -1,18 +1,18 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Arbor.NuGet.NuSpec.GlobalTool.NuGet;
 using NuGet.Versioning;
 using Serilog;
+using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
 {
     public static class CommandDefinitions
     {
-        public static Command Tool(ILogger logger, CancellationToken cancellationToken)
+        public static Command Tool(ILogger logger, IFileSystem fileSystem, CancellationToken cancellationToken)
         {
             var tool = new Command("nuspec", Strings.NuSpecDescription);
 
@@ -59,7 +59,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                 return NuSpecCreator.CreateSpecificationAsync(
                     packageDefinition,
                     logger,
-                    new DirectoryInfo(sourceDirectory),
+                    new DirectoryEntry(fileSystem, sourceDirectory),
                     outputFile,
                     cancellationToken);
             }
