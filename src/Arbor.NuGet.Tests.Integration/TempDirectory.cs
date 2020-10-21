@@ -5,18 +5,41 @@ namespace Arbor.NuGet.Tests.Integration
 {
     internal sealed class TempDirectory : IDisposable
     {
-        private string _directory;
+        private string? _directory;
 
-        private TempDirectory(string directory)
+        private TempDirectory(string directory) => _directory = directory;
+
+        public DirectoryInfo Directory
         {
-            _directory = directory;
+            get
+            {
+                if (_directory is null)
+                {
+                    throw new ObjectDisposedException(nameof(Directory));
+                }
+
+                return new DirectoryInfo(_directory!);
+            }
         }
 
-        public DirectoryInfo Directory => new DirectoryInfo(_directory);
+        public void Dispose()
+        {
+            if (_directory is null)
+            {
+                return;
+            }
+
+            if (System.IO.Directory.Exists(_directory))
+            {
+                System.IO.Directory.Delete(_directory, recursive: true);
+            }
+
+            _directory = null;
+        }
 
         public static TempDirectory Create()
         {
-            var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
             if (System.IO.Directory.Exists(directory))
             {
@@ -29,21 +52,6 @@ namespace Arbor.NuGet.Tests.Integration
             }
 
             return new TempDirectory(directory);
-        }
-
-        public void Dispose()
-        {
-            if (_directory is null)
-            {
-                return;
-            }
-
-            if (System.IO.Directory.Exists(_directory))
-            {
-                System.IO.Directory.Delete(_directory, true);
-            }
-
-            _directory = null;
         }
     }
 }

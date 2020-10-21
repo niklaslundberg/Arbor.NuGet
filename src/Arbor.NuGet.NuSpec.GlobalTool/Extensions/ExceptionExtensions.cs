@@ -6,7 +6,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Extensions
 {
     internal static class ExceptionExtensions
     {
-        public static bool IsFatal(this Exception ex)
+        public static bool IsFatal(this Exception? ex)
         {
             if (ex == null)
             {

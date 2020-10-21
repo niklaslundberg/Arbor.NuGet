@@ -4,11 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Arbor.NuGet.NuSpec.GlobalTool.NuGet;
-
 using NuGet.Versioning;
-
 using Serilog;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
@@ -28,31 +25,31 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                 if (string.IsNullOrWhiteSpace(sourceDirectory))
                 {
                     logger.Error($"Missing expected --{SourceDir().Aliases.FirstOrDefault()} argument");
-                    return Task.FromResult(1);
+                    return Task.FromResult(result: 1);
                 }
 
                 if (string.IsNullOrWhiteSpace(outputFile))
                 {
                     logger.Error($"Missing expected --{OutputFile().Aliases.FirstOrDefault()} argument");
-                    return Task.FromResult(2);
+                    return Task.FromResult(result: 2);
                 }
 
                 if (string.IsNullOrWhiteSpace(packageId))
                 {
                     logger.Error($"Missing expected --{PackageId().Aliases.FirstOrDefault()} argument");
-                    return Task.FromResult(3);
+                    return Task.FromResult(result: 3);
                 }
 
                 if (string.IsNullOrWhiteSpace(packageVersion))
                 {
                     logger.Error($"Missing expected --{PackageVersion().Aliases.FirstOrDefault()} argument");
-                    return Task.FromResult(4);
+                    return Task.FromResult(result: 4);
                 }
 
                 if (!SemanticVersion.TryParse(packageVersion, out SemanticVersion version))
                 {
                     logger.Error("Invalid semver '{PackageVersion}'", packageVersion);
-                    return Task.FromResult(5);
+                    return Task.FromResult(result: 5);
                 }
 
                 var packageDefinition = new PackageDefinition(
@@ -72,7 +69,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                 return new Command(
                     "create",
                     Strings.CreateDescription,
-                    new[] { SourceDir(), OutputFile(), PackageId(), PackageVersion() },
+                    new[] {SourceDir(), OutputFile(), PackageId(), PackageVersion()},
                     handler: CommandHandler.Create<string, string, string, string>(Bind));
             }
 
@@ -81,7 +78,10 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                 return new Option(
                     "--source-directory",
                     Strings.SourceDirectoryDescription,
-                    new Argument<string> { Arity = new ArgumentArity(1, 1) });
+                    new Argument<string>
+                    {
+                        Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
+                    });
             }
 
             Option OutputFile()
@@ -89,7 +89,10 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                 return new Option(
                     "--output-file",
                     Strings.OutputFileDescription,
-                    new Argument<string> { Arity = new ArgumentArity(1, 1) });
+                    new Argument<string>
+                    {
+                        Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
+                    });
             }
 
             Option PackageId()
@@ -97,7 +100,10 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                 return new Option(
                     "--package-id",
                     Strings.PackageIdDescription,
-                    new Argument<string> { Arity = new ArgumentArity(1, 1) });
+                    new Argument<string>
+                    {
+                        Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
+                    });
             }
 
             Option PackageVersion()
@@ -105,7 +111,10 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                 return new Option(
                     "--package-version",
                     Strings.PackageVersionDescription,
-                    new Argument<string> { Arity = new ArgumentArity(1, 1) });
+                    new Argument<string>
+                    {
+                        Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
+                    });
             }
         }
     }

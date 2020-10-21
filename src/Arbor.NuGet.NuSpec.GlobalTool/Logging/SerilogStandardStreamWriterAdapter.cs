@@ -2,26 +2,18 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Linq;
-
 using Serilog;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Logging
 {
     public sealed class SerilogStandardStreamWriterAdapter : IStandardStreamWriter, IDisposable
     {
+        private readonly List<string> _buffer = new List<string>();
         private readonly ILogger _logger;
 
-        private readonly List<string> _buffer = new List<string>();
+        public SerilogStandardStreamWriterAdapter(ILogger logger) => _logger = logger;
 
-        public SerilogStandardStreamWriterAdapter(ILogger logger)
-        {
-            _logger = logger;
-        }
-
-        public void Dispose()
-        {
-            Flush();
-        }
+        public void Dispose() => Flush();
 
         public void Write(string value)
         {

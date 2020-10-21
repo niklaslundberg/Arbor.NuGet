@@ -2,10 +2,7 @@
 {
     public class PackageId
     {
-        public PackageId(string id)
-        {
-            Id = id;
-        }
+        public PackageId(string id) => Id = id;
 
         public string Id { get; }
     }

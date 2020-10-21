@@ -1,5 +1,4 @@
 ﻿using System.IO;
-
 using JetBrains.Annotations;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
@@ -18,10 +17,8 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
         public string OutputFile { get; }
 
-        [NotNull]
-        public PackageDefinition PackageDefinition { get; }
+        [NotNull] public PackageDefinition PackageDefinition { get; }
 
-        [NotNull]
-        public DirectoryInfo SourceDirectory { get; }
+        [NotNull] public DirectoryInfo SourceDirectory { get; }
     }
 }

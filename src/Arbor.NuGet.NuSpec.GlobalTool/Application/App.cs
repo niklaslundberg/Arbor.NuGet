@@ -4,11 +4,9 @@ using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Arbor.NuGet.NuSpec.GlobalTool.CommandLine;
 using Arbor.NuGet.NuSpec.GlobalTool.Logging;
 using Arbor.Processing;
-
 using Serilog;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Application
@@ -28,10 +26,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Application
             _cancellationTokenSource = cancellationTokenSource;
         }
 
-        public void Dispose()
-        {
-            _cancellationTokenSource.Dispose();
-        }
+        public void Dispose() => _cancellationTokenSource.Dispose();
 
         public async Task<ExitCode> ExecuteAsync()
         {
@@ -40,9 +35,11 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Application
                 var parser = CreateParser();
 
                 int exitCode;
+
                 using (var serilogAdapter = new SerilogAdapter(_logger))
                 {
-                    exitCode = await parser.InvokeAsync(_args, serilogAdapter);
+                    exitCode = await parser.InvokeAsync(_args, serilogAdapter)
+                        .ConfigureAwait(continueOnCapturedContext: false);
                 }
 
                 return new ExitCode(exitCode);

@@ -1,5 +1,4 @@
 ﻿using System;
-
 using JetBrains.Annotations;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
@@ -25,10 +24,10 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
                     nameof(fileName));
             }
 
-            var baseDirLength = baseDirectory.Length;
-            var targetFilePath = fileName.Substring(baseDirLength);
+            int baseDirLength = baseDirectory.Length;
+            string targetFilePath = fileName[baseDirLength..];
 
-            var fileItem = $@"<file src=""{fileName}"" target=""Content\{targetFilePath}"" />";
+            string fileItem = $@"<file src=""{fileName}"" target=""Content\{targetFilePath}"" />";
 
             return fileItem.Replace("\\\\", "\\", StringComparison.Ordinal);
         }

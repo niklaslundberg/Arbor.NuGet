@@ -4,13 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Arbor.NuGet.NuSpec.GlobalTool.Checksum;
 using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
 using Arbor.Processing;
-
-using NuGet.Versioning;
-
 using Serilog;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
@@ -21,10 +17,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
         private readonly ILogger _logger;
 
-        public NuSpecCreator(ILogger logger)
-        {
-            _logger = logger;
-        }
+        public NuSpecCreator(ILogger logger) => _logger = logger;
 
         public static async Task<int> CreateSpecificationAsync(
             PackageDefinition packageDefinition,
@@ -37,7 +30,9 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
             var nuGetPackageConfiguration =
                 new NuGetPackageConfiguration(packageDefinition, sourceDirectory, outputFile);
-            var exitCode = await nuSpecCreator.CreateNuGetPackageAsync(nuGetPackageConfiguration, cancellationToken);
+
+            var exitCode = await nuSpecCreator.CreateNuGetPackageAsync(nuGetPackageConfiguration, cancellationToken)
+                .ConfigureAwait(continueOnCapturedContext: false);
 
             return exitCode.Code;
         }
@@ -60,42 +55,44 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
                 return ExitCode.Failure;
             }
 
-            if (!Path.GetExtension(packageConfiguration.OutputFile).Equals(NuSpecFileExtension, StringComparison.OrdinalIgnoreCase))
+            if (!Path.GetExtension(packageConfiguration.OutputFile)
+                .Equals(NuSpecFileExtension, StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Error("The output file must have the extension {Extension}", NuSpecFileExtension);
                 return ExitCode.Failure;
             }
 
-            var packageId = packageConfiguration.PackageDefinition.PackageId.Id;
-            var normalizedVersion = packageConfiguration.PackageDefinition.SemanticVersion.ToNormalizedString();
-            var description = packageId;
-            var summary = packageId;
+            string? packageId = packageConfiguration.PackageDefinition.PackageId.Id;
+            string? normalizedVersion = packageConfiguration.PackageDefinition.SemanticVersion.ToNormalizedString();
+            string? description = packageId;
+            string? summary = packageId;
             const string Language = "en-US";
             const string ProjectUrl = "http://nuget.org";
             const string IconUrl = "http://nuget.org";
             const string RequireLicenseAcceptance = "false";
             const string LicenseUrl = "http://nuget.org";
-            var copyright = "Undefined";
-            var tags = string.Empty;
+            string? copyright = "Undefined";
+            string? tags = string.Empty;
 
             var fileList = packageDirectory.GetFiles("*", SearchOption.AllDirectories);
 
-            var files = string.Join(
+            string? files = string.Join(
                 Environment.NewLine,
                 fileList.Select(file => NuSpecHelper.IncludedFile(file.FullName, packageDirectory.FullName)));
 
-            var targetDirectory = new FileInfo(packageConfiguration.OutputFile).Directory;
+            var targetDirectory = new FileInfo(packageConfiguration.OutputFile).Directory!;
 
             targetDirectory.EnsureExists();
 
             var contentFilesInfo = ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory);
 
-            var contentFileListFile =
+            string? contentFileListFile =
                 $@"<file src=""{contentFilesInfo.ContentFilesFile}"" target=""{contentFilesInfo.ContentFilesFile}"" />";
-            var checksumFile =
+
+            string? checksumFile =
                 $@"<file src=""{contentFilesInfo.ChecksumFile}"" target=""{contentFilesInfo.ChecksumFile}"" />";
 
-            var nuspecContent = $@"<?xml version=""1.0""?>
+            string? nuspecContent = $@"<?xml version=""1.0""?>
 <package>
     <metadata>
         <id>{packageId}</id>
@@ -135,10 +132,10 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
             var tempDir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), $"Arbor.NuGet_{DateTime.Now.Ticks}"))
                 .EnsureExists();
 
-            var nuspecTempFile = Path.Combine(tempDir.FullName, $"{packageId}.nuspec");
+            string nuspecTempFile = Path.Combine(tempDir.FullName, $"{packageId}.nuspec");
 
             await File.WriteAllTextAsync(nuspecTempFile, nuspecContent, Encoding.UTF8, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(continueOnCapturedContext: false);
 
             File.Copy(nuspecTempFile, packageConfiguration.OutputFile);
 

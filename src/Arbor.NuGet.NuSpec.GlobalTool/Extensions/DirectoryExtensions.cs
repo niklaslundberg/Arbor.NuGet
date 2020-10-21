@@ -19,6 +19,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Extensions
                 if (directoryInfo.Exists)
                 {
                     FileInfo[] fileInfos;
+
                     try
                     {
                         fileInfos = directoryInfo.GetFiles();
