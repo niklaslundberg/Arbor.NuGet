@@ -19,13 +19,8 @@ SET Arbor.Build.Tools.External.VisualStudio.Version.PreRelease.Enabled=true
 SET Arbor.Build.Tools.External.MSBuild.AllowPrerelease.Enabled=true
 SET Arbor.Build.Log.Level=Debug
 SET Arbor.Build.Tools.External.MSBuild.DotNet.Enabled=true
-
+SET Arbor.Build.Bootstrapper.AllowPrerelease=true
 SET Fallback.Version.Build=0
-
-IF "%Arbor.Build.Bootstrapper.AllowPrerelease%" == "" (
-	SET Arbor.Build.Bootstrapper.AllowPrerelease=true
-)
-
 SET Arbor.Build.NuGet.ReinstallArborPackageEnabled=true
 SET Arbor.Build.NuGet.VersionUpdateEnabled=false
 SET Arbor.Build.Artifacts.PdbArtifacts.Enabled=true
