@@ -23,6 +23,7 @@ SET Arbor.Build.NuGet.ReinstallArborPackageEnabled=true
 SET Arbor.Build.NuGet.VersionUpdateEnabled=false
 SET Arbor.Build.Artifacts.PdbArtifacts.Enabled=true
 SET Arbor.Build.NuGet.Package.CreateNuGetWebPackages.Enabled=true
+SET Arbor.Build.NuGet.PackageUpload.PackageExcludeStartsWithPatterns=dotnet-
 CALL dotnet arbor-build
 
 EXIT /B %ERRORLEVEL%
