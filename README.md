@@ -1,7 +1,6 @@
 # Arbor.NuGet
 
-![CI](https://github.com/niklaslundberg/Arbor.NuGet/workflows/CI/badge.svg) ![Nuget](https://img.shields.io/nuget/v/Arbor.NuGet.GlobalTool)
-
+![CI](https://github.com/niklaslundberg/Arbor.NuGet/workflows/CI/badge.svg) ![Nuget](https://img.shields.io/nuget/v/Arbor.NuGet.GlobalTool) ![MyGet (with prereleases)](https://img.shields.io/myget/arbor/vpre/Arbor.NuGet.GlobalTool?label=nuget%20preview%20%28myget%29)
 ## Example usages
 
 		nuspec create --source-directory=C:\Repository\Output\ --output-file=C:\Target\target.nuspec --package-id=test --package-version=1.2.3
