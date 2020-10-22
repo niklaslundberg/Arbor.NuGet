@@ -13,7 +13,7 @@ using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 {
-    public class NuSpecCreator
+    internal class NuSpecCreator
     {
         private const string NuSpecFileExtension = ".nuspec";
 

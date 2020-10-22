@@ -9,7 +9,7 @@ using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool
 {
-    public static class IOExtensions
+    internal static class IOExtensions
     {
         public static Task WriteAllTextAsync(this IFileSystem fileSystem,
             UPath path,

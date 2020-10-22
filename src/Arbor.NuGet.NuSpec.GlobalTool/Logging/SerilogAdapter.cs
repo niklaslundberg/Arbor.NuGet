@@ -4,7 +4,7 @@ using Serilog;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Logging
 {
-    public sealed class SerilogAdapter : IConsole, IDisposable
+    internal sealed class SerilogAdapter : IConsole, IDisposable
     {
         public SerilogAdapter(ILogger logger)
         {

@@ -32,4 +32,10 @@
     <PackageReference Include="System.CommandLine.Experimental" Version="0.1.0-alpha-63828-01" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Arbor.NuGet.Tests.Integration</_Parameter1>
+    </AssemblyAttribute>
+</ItemGroup>
+
 </Project>

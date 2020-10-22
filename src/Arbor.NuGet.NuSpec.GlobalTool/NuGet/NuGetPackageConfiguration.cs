@@ -3,7 +3,7 @@ using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 {
-    public class NuGetPackageConfiguration
+    internal class NuGetPackageConfiguration
     {
         public NuGetPackageConfiguration(
             [NotNull] PackageDefinition packageDefinition,

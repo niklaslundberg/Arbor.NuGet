@@ -6,7 +6,7 @@ using Serilog;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Logging
 {
-    public sealed class SerilogStandardStreamWriterAdapter : IStandardStreamWriter, IDisposable
+    internal sealed class SerilogStandardStreamWriterAdapter : IStandardStreamWriter, IDisposable
     {
         private readonly List<string> _buffer = new List<string>();
         private readonly ILogger _logger;

@@ -12,7 +12,7 @@ using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Checksum
 {
-    public static class ChecksumHelper
+    internal static class ChecksumHelper
     {
         public static async Task<FileListWithChecksumFile> CreateFileListForDirectory(
             [NotNull] DirectoryEntry baseDirectory,
@@ -42,7 +42,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Checksum
 
             string contentFilesFileChecksum = await GetFileHashSha512Base64Encoded(contentFilesFile).ConfigureAwait(false);;
 
-            FileEntry hashFile = new FileEntry(baseDirectory.FileSystem, UPath.Combine(tempDirectory.FullName, "contentFiles.json.sha512"));
+            var hashFile = new FileEntry(baseDirectory.FileSystem, UPath.Combine(tempDirectory.FullName, "contentFiles.json.sha512"));
 
             await hashFile.WriteAllTextAsync(contentFilesFileChecksum, Encoding.UTF8).ConfigureAwait(false);
 
@@ -50,7 +50,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Checksum
             var hashTargetPath = UPath.Combine(targetDirectory.FullName, hashFileName);
             hashFile.CopyTo(hashTargetPath, true);
 
-            var contentFilesFileName = contentFilesFile.Name;
+            string? contentFilesFileName = contentFilesFile.Name;
             var contentFilesTargetPath = UPath.Combine(targetDirectory.FullName, contentFilesFileName);
             contentFilesFile.CopyTo(contentFilesTargetPath, true);
 

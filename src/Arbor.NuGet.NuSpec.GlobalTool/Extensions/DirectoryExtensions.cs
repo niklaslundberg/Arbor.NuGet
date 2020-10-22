@@ -5,7 +5,7 @@ using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Extensions
 {
-    public static class DirectoryExtensions
+    internal static class DirectoryExtensions
     {
         public static void DeleteIfExists(this DirectoryEntry? directoryInfo, bool recursive = true)
         {

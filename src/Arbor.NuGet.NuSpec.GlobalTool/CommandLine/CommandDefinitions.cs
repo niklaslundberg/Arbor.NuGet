@@ -15,7 +15,7 @@ using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
 {
-    public static class CommandDefinitions
+    internal static class CommandDefinitions
     {
         public static Command Tool(ILogger logger, IFileSystem fileSystem, CancellationToken cancellationToken)
         {

@@ -4,7 +4,7 @@ using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 {
-    public static class NuSpecHelper
+    internal static class NuSpecHelper
     {
         public static string IncludedFile([NotNull] UPath fileName, [NotNull] UPath baseDirectory)
         {
