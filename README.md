@@ -1,6 +1,6 @@
 # Arbor.NuGet
 
-![CI](https://github.com/niklaslundberg/Arbor.NuGet/workflows/CI/badge.svg)
+![CI](https://github.com/niklaslundberg/Arbor.NuGet/workflows/CI/badge.svg) ![Nuget](https://img.shields.io/nuget/v/Arbor.NuGet.GlobalTool)
 
 ## Example usages
 
