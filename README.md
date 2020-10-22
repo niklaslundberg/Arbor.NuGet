@@ -1,5 +1,7 @@
 # Arbor.NuGet
 
+![CI](https://github.com/niklaslundberg/Arbor.NuGet/workflows/CI/badge.svg)
+
 ## Example usages
 
 		nuspec create --source-directory=C:\Repository\Output\ --output-file=C:\Target\target.nuspec --package-id=test --package-version=1.2.3
