@@ -13,5 +13,7 @@
         public const string PackageVersionDescription = "Package version (semver)";
 
         public const string SourceDirectoryDescription = "Source directory";
+
+        public const string VersionFile = "Version file";
     }
 }

@@ -25,7 +25,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
             PackageDefinition packageDefinition,
             ILogger logger,
             DirectoryEntry sourceDirectory,
-            string outputFile,
+            UPath outputFile,
             CancellationToken cancellationToken)
         {
             var nuSpecCreator = new NuSpecCreator(logger);
@@ -51,13 +51,13 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
                 return ExitCode.Failure;
             }
 
-            if (!Path.HasExtension(packageConfiguration.OutputFile))
+            if (string.IsNullOrWhiteSpace(packageConfiguration.OutputFile.GetExtensionWithDot()))
             {
                 _logger.Error("The output file is missing extension");
                 return ExitCode.Failure;
             }
 
-            if (!Path.GetExtension(packageConfiguration.OutputFile)
+            if (!packageConfiguration.OutputFile.GetExtensionWithDot()
                 .Equals(NuSpecFileExtension, StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Error("The output file must have the extension {Extension}", NuSpecFileExtension);

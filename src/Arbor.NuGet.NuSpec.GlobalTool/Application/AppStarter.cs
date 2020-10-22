@@ -10,7 +10,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Application
 {
     public static class AppStarter
     {
-        public static async Task<int> CreateAndStartAsync(string[] args)
+        public static async Task<int> CreateAndStartAsync(string[]? args)
         {
             int exitCode;
 
@@ -28,7 +28,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Application
             return exitCode;
         }
 
-        private static App Start(string[] args, IFileSystem? fileSystem = null)
+        private static App Start(string[]? args, IFileSystem? fileSystem = null)
         {
             var logger = new LoggerConfiguration()
                 .WriteTo.Console(outputTemplate: "{Message:lj}{NewLine}{Exception}")

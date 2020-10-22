@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
 using JetBrains.Annotations;
 using Zio;
 
@@ -26,6 +27,8 @@ namespace Arbor.NuGet.NuSpec.GlobalTool
             Encoding? encoding = null,
             CancellationToken cancellationToken = default)
         {
+            file.Directory.EnsureExists();
+
             await using var stream = file.Open(FileMode.OpenOrCreate, FileAccess.Write);
 
             await WriteAllTextAsync(stream, text, encoding, cancellationToken)

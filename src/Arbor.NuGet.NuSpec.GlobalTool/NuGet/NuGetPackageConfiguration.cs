@@ -8,14 +8,14 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
         public NuGetPackageConfiguration(
             [NotNull] PackageDefinition packageDefinition,
             [NotNull] DirectoryEntry sourceDirectory,
-            string outputFile)
+            UPath outputFile)
         {
             PackageDefinition = packageDefinition;
             SourceDirectory = sourceDirectory;
             OutputFile = outputFile;
         }
 
-        public string OutputFile { get; }
+        public UPath OutputFile { get; }
 
         [NotNull] public PackageDefinition PackageDefinition { get; }
 
