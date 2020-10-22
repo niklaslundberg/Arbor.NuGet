@@ -4,12 +4,11 @@ using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Arbor.NuGet.NuSpec.GlobalTool.CommandLine;
 using Arbor.NuGet.NuSpec.GlobalTool.Logging;
 using Arbor.Processing;
-
 using Serilog;
+using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Application
 {
@@ -18,18 +17,27 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Application
         private readonly string[] _args;
 
         private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly bool _leaveFileSystemOpen;
 
         private readonly ILogger _logger;
+        private readonly IFileSystem _fileSystem;
 
-        public App(string[] args, ILogger logger, CancellationTokenSource cancellationTokenSource)
+        public App(string[] args, ILogger logger, IFileSystem fileSystem, CancellationTokenSource cancellationTokenSource, bool leaveFileSystemOpen = false)
         {
             _args = args;
             _logger = logger;
+            _fileSystem = fileSystem;
             _cancellationTokenSource = cancellationTokenSource;
+            _leaveFileSystemOpen = leaveFileSystemOpen;
         }
 
         public void Dispose()
         {
+            if (!_leaveFileSystemOpen)
+            {
+                _fileSystem.Dispose();
+            }
+
             _cancellationTokenSource.Dispose();
         }
 
@@ -40,9 +48,11 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Application
                 var parser = CreateParser();
 
                 int exitCode;
+
                 using (var serilogAdapter = new SerilogAdapter(_logger))
                 {
-                    exitCode = await parser.InvokeAsync(_args, serilogAdapter);
+                    exitCode = await parser.InvokeAsync(_args, serilogAdapter)
+                        .ConfigureAwait(continueOnCapturedContext: false);
                 }
 
                 return new ExitCode(exitCode);
@@ -57,7 +67,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Application
         private Parser CreateParser()
         {
             var parser = new CommandLineBuilder()
-                .AddCommand(CommandDefinitions.Tool(_logger, _cancellationTokenSource.Token)).UseVersionOption()
+                .AddCommand(CommandDefinitions.Tool(_logger, _fileSystem, _cancellationTokenSource.Token)).UseVersionOption()
                 .UseHelp().UseParseDirective().UseDebugDirective().UseSuggestDirective().RegisterWithDotnetSuggest()
                 .UseParseErrorReporting().UseExceptionHandler().Build();
 

@@ -2,16 +2,21 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <PackAsTool>true</PackAsTool>
     <PackageId>Arbor.NuGet.GlobalTool</PackageId>
     <AssemblyName>dotnet-arbor-nuget</AssemblyName>
     <LangVersion>latest</LangVersion>
-    <CodeAnalysisRuleSet>..\..\Arbor.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet></CodeAnalysisRuleSet>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/niklaslundberg/Arbor.NuGet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arbor.Processing" Version="0.2.0" />
+    <PackageReference Include="Arbor.FS" Version="0.1.0" />
+    <PackageReference Include="Arbor.KVConfiguration.JsonConfiguration" Version="0.20.0" />
+    <PackageReference Include="Arbor.Processing" Version="0.6.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2018.3.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="2.10.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.10.0" />
@@ -26,5 +31,11 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
     <PackageReference Include="System.CommandLine.Experimental" Version="0.1.0-alpha-63828-01" />
   </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Arbor.NuGet.Tests.Integration</_Parameter1>
+    </AssemblyAttribute>
+</ItemGroup>
 
 </Project>

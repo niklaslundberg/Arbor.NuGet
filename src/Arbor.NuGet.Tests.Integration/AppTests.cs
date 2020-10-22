@@ -3,57 +3,48 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Arbor.NuGet.NuSpec.GlobalTool;
 using Arbor.NuGet.NuSpec.GlobalTool.Application;
 using Serilog;
 using Serilog.Core;
-using Serilog.Events;
 using Xunit;
 using Xunit.Abstractions;
+using Zio;
+using Zio.FileSystems;
 
 namespace Arbor.NuGet.Tests.Integration
 {
     public class AppTests
     {
-        public AppTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         private readonly ITestOutputHelper _testOutputHelper;
 
-        private static CancellationTokenSource CreateCancellation()
-        {
-            return new CancellationTokenSource(TimeSpan.FromMinutes(1));
-        }
+        public AppTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
 
-        private Logger CreateLogger()
-        {
-            return new LoggerConfiguration().WriteTo.TestOutput(_testOutputHelper, LogEventLevel.Verbose)
+        private static CancellationTokenSource CreateCancellation() =>
+            new CancellationTokenSource(TimeSpan.FromMinutes(value: 1));
+
+        private Logger CreateLogger() =>
+            new LoggerConfiguration().WriteTo.TestOutput(_testOutputHelper)
                 .CreateLogger();
-        }
 
         [Fact]
         public async Task WhenCreatingNuSpecWithCreateAndMissingOutputThenExitCodeShouldNotBe0()
         {
             string[] args = {"nuspec", "create", "--source-directory", @"C:\temp"};
 
-            using (var app = new App(args, CreateLogger(), CreateCancellation()))
-            {
-                var exitCode = await app.ExecuteAsync();
+            using var app = new App(args, CreateLogger(), new MemoryFileSystem(),  CreateCancellation());
+            var exitCode = await app.ExecuteAsync();
 
-                Assert.NotEqual(0, exitCode);
-            }
+            Assert.NotEqual(expected: 0, exitCode);
         }
 
         [Fact]
         public async Task WhenCreatingNuSpecWithMissingCommandThenExitCodeShouldNotBe0()
         {
-            using (var app = new App(new[] {"nuspec"}, CreateLogger(), CreateCancellation()))
-            {
-                var exitCode = await app.ExecuteAsync();
+            using var app = new App(new[] { "nuspec" }, CreateLogger(), new MemoryFileSystem(), CreateCancellation());
+            var exitCode = await app.ExecuteAsync();
 
-                Assert.NotEqual(0, exitCode);
-            }
+            Assert.NotEqual(expected: 0, exitCode);
         }
 
         [Fact]
@@ -61,12 +52,10 @@ namespace Arbor.NuGet.Tests.Integration
         {
             string[] args = {"nuspec", "create"};
 
-            using (var app = new App(args, CreateLogger(), CreateCancellation()))
-            {
-                var exitCode = await app.ExecuteAsync();
+            using var app = new App(args, CreateLogger(), new MemoryFileSystem(), CreateCancellation());
+            var exitCode = await app.ExecuteAsync();
 
-                Assert.NotEqual(0, exitCode);
-            }
+            Assert.NotEqual(expected: 0, exitCode);
         }
 
         [Fact]
@@ -76,21 +65,21 @@ namespace Arbor.NuGet.Tests.Integration
 
             using (var cts = CreateCancellation())
             {
-                using (var sourceDirectory = TempDirectory.Create())
-                {
-                    await File.WriteAllTextAsync(
-                        Path.Combine(sourceDirectory.Directory.FullName, "test.txt"),
-                        "Hello world",
-                        Encoding.UTF8,
-                        cts.Token);
+                using IFileSystem fileSystem = new MemoryFileSystem();
+                using var sourceDirectory = TempDirectory.Create(fileSystem);
 
-                    using (var targetDirectory = TempDirectory.Create())
-                    {
-                        using (var logger = CreateLogger())
-                        {
-                            var outputFile = Path.Combine(targetDirectory.Directory.FullName, "result.nuspec");
-                            string[] args =
-                            {
+                await fileSystem.WriteAllTextAsync(
+                    UPath.Combine(sourceDirectory.Directory.FullName, "test.txt"),
+                    "Hello world",
+                    Encoding.UTF8,
+                    cts.Token);
+
+                using var targetDirectory = TempDirectory.Create(fileSystem);
+                using var logger = CreateLogger();
+                var outputFile = UPath.Combine(targetDirectory.Directory.FullName, "result.nuspec");
+
+                string[] args =
+                {
                                 "nuspec",
                                 "create",
                                 "--source-directory",
@@ -103,33 +92,99 @@ namespace Arbor.NuGet.Tests.Integration
                                 "1.2.3"
                             };
 
-                            using (var app = new App(args, CreateLogger(), cts))
-                            {
-                                exitCode = await app.ExecuteAsync();
+                using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
+                exitCode = await app.ExecuteAsync();
 
-                                Assert.True(File.Exists(outputFile), $"File.Exists(outputFile) {{'{outputFile}'}}");
+                Assert.True(fileSystem.FileExists(outputFile), $"File.Exists(outputFile) {{'{outputFile}'}}");
 
-                                var content = await File.ReadAllTextAsync(outputFile, Encoding.UTF8, cts.Token);
+                string? content = await fileSystem.ReadAllTextAsync(outputFile, Encoding.UTF8, cts.Token);
 
-                                logger.Information("Nuspec: {NewLine}{Content}", Environment.NewLine, content);
-                            }
-                        }
-                    }
-                }
+                logger.Information("Nuspec: {NewLine}{Content}", Environment.NewLine, content);
             }
 
-            Assert.Equal(0, exitCode);
+            Assert.Equal(expected: 0, exitCode);
+        }
+
+        [Fact]
+        public async Task WhenCreatingNuSpecWithVersionFileThenVersionShouldBeCorrect()
+        {
+            int exitCode;
+
+            using (var cts = CreateCancellation())
+            {
+                using IFileSystem fileSystem = new PhysicalFileSystem();
+                using var versionTempDirectory = TempDirectory.Create(fileSystem);
+
+                string jsonVersionFileContent = @"{
+    ""version"": ""1.0"",
+    ""keys"": [
+      {
+        ""key"": ""major"",
+        ""value"": 1
+      },
+      {
+        ""key"": ""minor"",
+        ""value"": 2
+      },
+      {
+        ""key"": ""patch"",
+        ""value"": 3
+      }
+    ]
+  }";
+
+                UPath versionJsonPath = UPath.Combine(versionTempDirectory.Directory.Path, Guid.NewGuid() + "_version.json");
+
+                await fileSystem.WriteAllTextAsync(versionJsonPath, jsonVersionFileContent, cancellationToken: cts.Token);
+
+                using var sourceDirectory = TempDirectory.Create(fileSystem);
+
+                await fileSystem.WriteAllTextAsync(
+                    UPath.Combine(sourceDirectory.Directory.FullName, "test.txt"),
+                    "Hello world",
+                    Encoding.UTF8,
+                    cts.Token);
+
+                using var targetDirectory = TempDirectory.Create(fileSystem);
+                using var logger = CreateLogger();
+                var outputFile = UPath.Combine(targetDirectory.Directory.FullName, "result.nuspec");
+
+                string[] args =
+                {
+                                "nuspec",
+                                "create",
+                                "--source-directory",
+                                $"{sourceDirectory.Directory.FullName}",
+                                "--output-file",
+                                $"{outputFile}",
+                                "--package-id",
+                                "Arbor.Sample",
+                                "--version-file",
+                                versionJsonPath.FullName
+                            };
+
+                using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
+                exitCode = await app.ExecuteAsync();
+
+                Assert.Equal(0, exitCode);
+
+                Assert.True(fileSystem.FileExists(outputFile), $"File.Exists(outputFile) {{'{outputFile}'}}");
+
+                string? content = await fileSystem.ReadAllTextAsync(outputFile, Encoding.UTF8, cts.Token);
+
+                logger.Information("Nuspec: {NewLine}{Content}", Environment.NewLine, content);
+            }
+
+            Assert.Equal(expected: 0, exitCode);
         }
 
         [Fact]
         public async Task WhenRunningWithWithEmptyArgsThenExitCodeShouldNotBe0()
         {
-            using (var app = new App(Array.Empty<string>(), CreateLogger(), CreateCancellation()))
-            {
-                var exitCode = await app.ExecuteAsync();
+            using var app = new App(Array.Empty<string>(), CreateLogger(), new MemoryFileSystem(),  CreateCancellation());
+            var exitCode = await app.ExecuteAsync();
 
-                Assert.NotEqual(0, exitCode);
-            }
+            Assert.NotEqual(expected: 0, exitCode);
         }
     }
 }

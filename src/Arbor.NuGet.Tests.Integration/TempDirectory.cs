@@ -1,34 +1,28 @@
 ﻿using System;
 using System.IO;
+using Arbor.FS;
+using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
+using Zio;
 
 namespace Arbor.NuGet.Tests.Integration
 {
     internal sealed class TempDirectory : IDisposable
     {
-        private string _directory;
+        private DirectoryEntry? _directory;
 
-        private TempDirectory(string directory)
+        private TempDirectory(DirectoryEntry directory) => _directory = directory;
+
+        public DirectoryEntry Directory
         {
-            _directory = directory;
-        }
-
-        public DirectoryInfo Directory => new DirectoryInfo(_directory);
-
-        public static TempDirectory Create()
-        {
-            var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-
-            if (System.IO.Directory.Exists(directory))
+            get
             {
-                throw new InvalidOperationException("The temp directory already exists");
-            }
+                if (_directory is null)
+                {
+                    throw new ObjectDisposedException(nameof(Directory));
+                }
 
-            if (!System.IO.Directory.Exists(directory))
-            {
-                System.IO.Directory.CreateDirectory(directory);
+                return _directory;
             }
-
-            return new TempDirectory(directory);
         }
 
         public void Dispose()
@@ -38,12 +32,29 @@ namespace Arbor.NuGet.Tests.Integration
                 return;
             }
 
-            if (System.IO.Directory.Exists(_directory))
+            var tmp = _directory;
+            _directory = null;
+
+            tmp?.DeleteIfExists();
+        }
+
+        public static TempDirectory Create(IFileSystem fileSystem)
+        {
+            var directory = UPath.Combine(Path.GetTempPath().NormalizePath(), Guid.NewGuid().ToString());
+
+            if (fileSystem.DirectoryExists(directory))
             {
-                System.IO.Directory.Delete(_directory, true);
+                throw new InvalidOperationException("The temp directory already exists");
             }
 
-            _directory = null;
+            if (!fileSystem.DirectoryExists(directory))
+            {
+                fileSystem.CreateDirectory(directory);
+            }
+
+            var directoryEntry = fileSystem.GetDirectoryEntry(directory);
+
+            return new TempDirectory(directoryEntry);
         }
     }
 }

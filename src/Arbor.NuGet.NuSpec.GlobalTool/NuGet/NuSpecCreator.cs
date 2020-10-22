@@ -4,38 +4,37 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Arbor.FS;
 using Arbor.NuGet.NuSpec.GlobalTool.Checksum;
 using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
 using Arbor.Processing;
-
-using NuGet.Versioning;
-
 using Serilog;
+using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 {
-    public class NuSpecCreator
+    internal class NuSpecCreator
     {
+        private const string NuSpecFileExtension = ".nuspec";
+
         private readonly ILogger _logger;
 
-        public NuSpecCreator(ILogger logger)
-        {
-            _logger = logger;
-        }
+        public NuSpecCreator(ILogger logger) => _logger = logger;
 
         public static async Task<int> CreateSpecificationAsync(
             PackageDefinition packageDefinition,
             ILogger logger,
-            DirectoryInfo sourceDirectory,
-            string outputFile,
+            DirectoryEntry sourceDirectory,
+            UPath outputFile,
             CancellationToken cancellationToken)
         {
             var nuSpecCreator = new NuSpecCreator(logger);
 
             var nuGetPackageConfiguration =
                 new NuGetPackageConfiguration(packageDefinition, sourceDirectory, outputFile);
-            var exitCode = await nuSpecCreator.CreateNuGetPackageAsync(nuGetPackageConfiguration, cancellationToken);
+
+            var exitCode = await nuSpecCreator.CreateNuGetPackageAsync(nuGetPackageConfiguration, cancellationToken)
+                .ConfigureAwait(continueOnCapturedContext: false);
 
             return exitCode.Code;
         }
@@ -48,37 +47,54 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
             if (!packageDirectory.Exists)
             {
+                _logger.Error("The source directory '{Directory}' does not exist", packageDirectory.FullName);
                 return ExitCode.Failure;
             }
 
-            var packageId = packageConfiguration.PackageDefinition.PackageId.Id;
-            var normalizedVersion = packageConfiguration.PackageDefinition.SemanticVersion.ToNormalizedString();
-            var description = packageId;
-            var summary = packageId;
+            if (string.IsNullOrWhiteSpace(packageConfiguration.OutputFile.GetExtensionWithDot()))
+            {
+                _logger.Error("The output file is missing extension");
+                return ExitCode.Failure;
+            }
+
+            if (!packageConfiguration.OutputFile.GetExtensionWithDot()
+                .Equals(NuSpecFileExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.Error("The output file must have the extension {Extension}", NuSpecFileExtension);
+                return ExitCode.Failure;
+            }
+
+            string? packageId = packageConfiguration.PackageDefinition.PackageId.Id;
+            string? normalizedVersion = packageConfiguration.PackageDefinition.SemanticVersion.ToNormalizedString();
+            string? description = packageId;
+            string? summary = packageId;
             const string Language = "en-US";
             const string ProjectUrl = "http://nuget.org";
             const string IconUrl = "http://nuget.org";
             const string RequireLicenseAcceptance = "false";
             const string LicenseUrl = "http://nuget.org";
-            var copyright = "Undefined";
-            var tags = string.Empty;
+            string? copyright = "Undefined";
+            string? tags = string.Empty;
 
-            var fileList = packageDirectory.GetFiles("*", SearchOption.AllDirectories);
+            var fileList = packageDirectory.EnumerateFiles("*", SearchOption.AllDirectories);
 
-            var files = string.Join(
+            string? files = string.Join(
                 Environment.NewLine,
                 fileList.Select(file => NuSpecHelper.IncludedFile(file.FullName, packageDirectory.FullName)));
 
-            var targetDirectory = new FileInfo(packageConfiguration.OutputFile).Directory;
+            var targetDirectory = new FileEntry(packageConfiguration.SourceDirectory.FileSystem, packageConfiguration.OutputFile).Directory!;
 
-            var contentFilesInfo = ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory);
+            targetDirectory.EnsureExists();
 
-            var contentFileListFile =
+            var contentFilesInfo = await ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory).ConfigureAwait(false);
+
+            string? contentFileListFile =
                 $@"<file src=""{contentFilesInfo.ContentFilesFile}"" target=""{contentFilesInfo.ContentFilesFile}"" />";
-            var checksumFile =
+
+            string? checksumFile =
                 $@"<file src=""{contentFilesInfo.ChecksumFile}"" target=""{contentFilesInfo.ChecksumFile}"" />";
 
-            var nuspecContent = $@"<?xml version=""1.0""?>
+            string? nuspecContent = $@"<?xml version=""1.0""?>
 <package>
     <metadata>
         <id>{packageId}</id>
@@ -115,17 +131,18 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
             _logger.Information("{NuSpec}", nuspecContent);
 
-            var tempDir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), $"Arbor.NuGet_{DateTime.Now.Ticks}"))
+            var tempDir = new DirectoryEntry( packageConfiguration.SourceDirectory.FileSystem, UPath.Combine(Path.GetTempPath().NormalizePath(), $"Arbor.NuGet_{DateTime.Now.Ticks}"))
                 .EnsureExists();
 
-            var nuspecTempFile = Path.Combine(tempDir.FullName, $"{packageId}.nuspec");
+            var nuspecTempFile = UPath.Combine(tempDir.FullName, $"{packageId}.nuspec");
 
-            await File.WriteAllTextAsync(nuspecTempFile, nuspecContent, Encoding.UTF8, cancellationToken)
-                .ConfigureAwait(false);
+            await tempDir.FileSystem.WriteAllTextAsync(nuspecTempFile, nuspecContent, Encoding.UTF8, cancellationToken)
+                .ConfigureAwait(continueOnCapturedContext: false);
 
-            File.Copy(nuspecTempFile, packageConfiguration.OutputFile);
+            var tempFile = tempDir.FileSystem.GetFileEntry(nuspecTempFile);
+            tempFile.CopyTo(packageConfiguration.OutputFile, true);
 
-            File.Delete(nuspecTempFile);
+            tempFile.Delete();
 
             tempDir.DeleteIfExists();
 

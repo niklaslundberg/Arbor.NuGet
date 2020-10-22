@@ -1,10 +1,9 @@
 ﻿using System;
-
 using JetBrains.Annotations;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Checksum
 {
-    public class FileListWithChecksumFile
+    internal class FileListWithChecksumFile
     {
         public FileListWithChecksumFile([NotNull] string contentFilesFile, string checksumFile)
         {

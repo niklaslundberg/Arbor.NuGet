@@ -1,27 +1,24 @@
-﻿using System.IO;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
+using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 {
-    public class NuGetPackageConfiguration
+    internal class NuGetPackageConfiguration
     {
         public NuGetPackageConfiguration(
             [NotNull] PackageDefinition packageDefinition,
-            [NotNull] DirectoryInfo sourceDirectory,
-            string outputFile)
+            [NotNull] DirectoryEntry sourceDirectory,
+            UPath outputFile)
         {
             PackageDefinition = packageDefinition;
             SourceDirectory = sourceDirectory;
             OutputFile = outputFile;
         }
 
-        public string OutputFile { get; }
+        public UPath OutputFile { get; }
 
-        [NotNull]
-        public PackageDefinition PackageDefinition { get; }
+        [NotNull] public PackageDefinition PackageDefinition { get; }
 
-        [NotNull]
-        public DirectoryInfo SourceDirectory { get; }
+        [NotNull] public DirectoryEntry SourceDirectory { get; }
     }
 }
