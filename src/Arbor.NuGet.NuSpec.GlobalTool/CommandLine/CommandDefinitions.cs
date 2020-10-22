@@ -71,26 +71,26 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
             {
                 if (string.IsNullOrWhiteSpace(sourceDirectory))
                 {
-                    logger.Error($"Missing expected --{SourceDir().Aliases.FirstOrDefault()} argument");
+                    logger.Error("Missing expected --{Arg} argument", SourceDir().Aliases.FirstOrDefault());
                     return 1;
                 }
 
                 if (string.IsNullOrWhiteSpace(outputFile))
                 {
-                    logger.Error($"Missing expected --{OutputFile().Aliases.FirstOrDefault()} argument");
+                    logger.Error("Missing expected --{Arg} argument", OutputFile().Aliases.FirstOrDefault());
                     return 2;
                 }
 
                 if (string.IsNullOrWhiteSpace(packageId))
                 {
-                    logger.Error($"Missing expected --{PackageId().Aliases.FirstOrDefault()} argument");
+                    logger.Error("Missing expected --{Arg} argument", PackageId().Aliases.FirstOrDefault());
                     return 3;
                 }
 
                 if (string.IsNullOrWhiteSpace(packageVersion) &&
                     string.IsNullOrWhiteSpace(versionFile))
                 {
-                    logger.Error($"Missing expected --{PackageVersion().Aliases.FirstOrDefault()} argument");
+                    logger.Error("Missing expected --{Arg} argument", PackageVersion().Aliases.FirstOrDefault());
                     return 4;
                 }
 
