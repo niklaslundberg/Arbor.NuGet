@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -18,13 +19,23 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Checksum
             [NotNull] DirectoryEntry baseDirectory,
             DirectoryEntry targetDirectory)
         {
-            var files = baseDirectory.EnumerateFiles("*", SearchOption.AllDirectories).OrderBy(file => file.FullName)
-                .Select(file => file).Select(
-                    file => new
-                    {
-                        file = file.FullName[baseDirectory.FullName.Length..],
-                        sha512Base64Encoded = GetFileHashSha512Base64Encoded(file)
-                    }).ToArray();
+            var fileEntries = baseDirectory.EnumerateFiles("*", SearchOption.AllDirectories).OrderBy(file => file.FullName)
+                .Select(file => file);
+
+            var files = new List<(string,string)>();
+
+            foreach (var fileEntry in fileEntries)
+            {
+                string fileHashSha512Base64Encoded = await GetFileHashSha512Base64Encoded(fileEntry).ConfigureAwait(false);
+
+                string internalFullPath = fileEntry.FileSystem.ConvertPathToInternal(fileEntry.Path);
+
+                string internalBaseDirectoryFullName = fileEntry.FileSystem.ConvertPathToInternal(baseDirectory.Path);
+
+                string file = internalFullPath[internalBaseDirectoryFullName.Length..];
+
+                files.Add((file, fileHashSha512Base64Encoded));
+            }
 
             string json = JsonConvert.SerializeObject(new {files}, Formatting.Indented);
 

@@ -80,7 +80,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
             string files = string.Join(
                 Environment.NewLine,
-                fileList.Select(file => NuSpecHelper.IncludedFile(file.FullName, packageDirectory.FullName)));
+                fileList.Select(file => NuSpecHelper.IncludedFile(file, packageDirectory)));
 
             var targetDirectory = new FileEntry(packageConfiguration.SourceDirectory.FileSystem, packageConfiguration.OutputFile).Directory!;
 
