@@ -1,12 +1,11 @@
 ﻿using System;
-using JetBrains.Annotations;
 using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 {
     internal static class NuSpecHelper
     {
-        public static string IncludedFile([NotNull] UPath fileName, [NotNull] UPath baseDirectory)
+        public static string IncludedFile(UPath fileName, UPath baseDirectory)
         {
             if (fileName.IsNull ||
                 fileName.IsEmpty)
@@ -27,8 +26,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
                     nameof(fileName));
             }
 
-            int baseDirLength = baseDirectory.FullName.Length;
-            var targetFilePath = new UPath(fileName.FullName[baseDirLength..]);
+            var targetFilePath = new UPath(fileName.FullName[baseDirectory.FullName.Length..]);
 
             string fileItem = $@"<file src=""{fileName}"" target=""Content\{targetFilePath}"" />";
 

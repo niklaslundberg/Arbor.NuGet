@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.CommandLine;
+﻿using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Arbor.FS;
-using Arbor.KVConfiguration.JsonConfiguration;
-using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
 using Arbor.NuGet.NuSpec.GlobalTool.NuGet;
 using NuGet.Versioning;
 using Serilog;
@@ -25,49 +21,12 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
 
             return tool;
 
-            async Task<SemanticVersion?> GetVersionFromFile(UPath versionFile)
-            {
-                try
-                {
-                    string? path = fileSystem.ConvertPathToInternal(versionFile);
-                    var jsonFileReader = new JsonFileReader(path);
-
-                    var configurationItems = jsonFileReader.ReadConfiguration();
-
-                    const string major = nameof(major);
-                    const string minor = nameof(minor);
-                    const string patch = nameof(patch);
-
-                    var items = new Dictionary<string, int> {[major] = 0, [minor] = 0, [patch] = 0};
-
-                    foreach (string key in items.Keys.ToArray())
-                    {
-                        string? value = configurationItems.SingleOrDefault(pair =>
-                            string.Equals(pair.Key, key, StringComparison.OrdinalIgnoreCase))?.Value;
-
-                        if (!int.TryParse(value, out int intValue) ||
-                            intValue < 0)
-                        {
-                            throw new FormatException("Could not parse {Key} as a positive integer");
-                        }
-
-                        items[key] = intValue;
-                    }
-
-                    return new SemanticVersion(items[major], items[minor], items[patch]);
-                }
-                catch (Exception ex) when (!ex.IsFatal())
-                {
-                    logger.Error(ex, "Could not get version from file {VersionFile}", versionFile);
-                    return null;
-                }
-            }
-
             async Task<int> Bind(string? sourceDirectory,
                 string? outputFile,
                 string? packageId,
                 string? packageVersion,
-                string? versionFile)
+                string? versionFile,
+                string? msBuildVersionFile)
             {
                 if (string.IsNullOrWhiteSpace(sourceDirectory))
                 {
@@ -87,8 +46,9 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                     return 3;
                 }
 
-                if (string.IsNullOrWhiteSpace(packageVersion) &&
-                    string.IsNullOrWhiteSpace(versionFile))
+                if (string.IsNullOrWhiteSpace(packageVersion)
+                    && string.IsNullOrWhiteSpace(versionFile)
+                    && string.IsNullOrWhiteSpace(msBuildVersionFile))
                 {
                     logger.Error("Missing expected --{Arg} argument", PackageVersion().Aliases.FirstOrDefault());
                     return 4;
@@ -106,13 +66,25 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
 
                     version = parsedVersion;
                 }
-                else
+                else if (!string.IsNullOrWhiteSpace(versionFile))
                 {
-                    var versionFromFile = await GetVersionFromFile(versionFile!.NormalizePath());
+                    var versionFromFile = JsonFileVersionHelper.GetVersionFromJsonFile(versionFile!.NormalizePath(), fileSystem, logger);
 
                     if (versionFromFile is null)
                     {
                         logger.Error("Could not get version from file '{VersionFile}'", versionFile);
+                        return 6;
+                    }
+
+                    version = versionFromFile;
+                }
+                else
+                {
+                    var versionFromFile = JsonFileVersionHelper.GetVersionFromMsBuildFile(msBuildVersionFile!.NormalizePath(), fileSystem, logger);
+
+                    if (versionFromFile is null)
+                    {
+                        logger.Error("Could not get version from MSBuild file '{VersionFile}'", versionFile);
                         return 6;
                     }
 
@@ -128,7 +100,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                     logger,
                     new DirectoryEntry(fileSystem, sourceDirectory.NormalizePath()),
                     outputFile.NormalizePath(),
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
             }
 
             Command NuSpec()
@@ -136,8 +108,8 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                 return new Command(
                     "create",
                     Strings.CreateDescription,
-                    new[] {SourceDir(), OutputFile(), PackageId(), PackageVersion(), VersionFile()},
-                    handler: CommandHandler.Create<string, string, string, string, string>(Bind));
+                    new[] {SourceDir(), OutputFile(), PackageId(), PackageVersion(), VersionFile(), MsBuildVersionFile()},
+                    handler: CommandHandler.Create<string, string, string, string, string, string>(Bind));
             }
 
             Option SourceDir()
@@ -188,6 +160,17 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
             {
                 return new Option(
                     "--version-file",
+                    Strings.VersionFile,
+                    new Argument<string>
+                    {
+                        Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
+                    });
+            }
+
+            Option MsBuildVersionFile()
+            {
+                return new Option(
+                    "--msbuild-version-file",
                     Strings.VersionFile,
                     new Argument<string>
                     {

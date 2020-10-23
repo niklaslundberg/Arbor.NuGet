@@ -19,7 +19,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
         private readonly ILogger _logger;
 
-        public NuSpecCreator(ILogger logger) => _logger = logger;
+        private NuSpecCreator(ILogger logger) => _logger = logger;
 
         public static async Task<int> CreateSpecificationAsync(
             PackageDefinition packageDefinition,
@@ -64,21 +64,21 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
                 return ExitCode.Failure;
             }
 
-            string? packageId = packageConfiguration.PackageDefinition.PackageId.Id;
+            string packageId = packageConfiguration.PackageDefinition.PackageId.Id;
             string? normalizedVersion = packageConfiguration.PackageDefinition.SemanticVersion.ToNormalizedString();
-            string? description = packageId;
-            string? summary = packageId;
+            string description = packageId;
+            string summary = packageId;
             const string Language = "en-US";
             const string ProjectUrl = "http://nuget.org";
             const string IconUrl = "http://nuget.org";
             const string RequireLicenseAcceptance = "false";
             const string LicenseUrl = "http://nuget.org";
-            string? copyright = "Undefined";
-            string? tags = string.Empty;
+            string copyright = "Undefined";
+            string tags = string.Empty;
 
             var fileList = packageDirectory.EnumerateFiles("*", SearchOption.AllDirectories);
 
-            string? files = string.Join(
+            string files = string.Join(
                 Environment.NewLine,
                 fileList.Select(file => NuSpecHelper.IncludedFile(file.FullName, packageDirectory.FullName)));
 
@@ -88,13 +88,13 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
             var contentFilesInfo = await ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory).ConfigureAwait(false);
 
-            string? contentFileListFile =
+            string contentFileListFile =
                 $@"<file src=""{contentFilesInfo.ContentFilesFile}"" target=""{contentFilesInfo.ContentFilesFile}"" />";
 
-            string? checksumFile =
+            string checksumFile =
                 $@"<file src=""{contentFilesInfo.ChecksumFile}"" target=""{contentFilesInfo.ChecksumFile}"" />";
 
-            string? nuspecContent = $@"<?xml version=""1.0""?>
+            string nuspecContent = $@"<?xml version=""1.0""?>
 <package>
     <metadata>
         <id>{packageId}</id>

@@ -133,7 +133,7 @@ namespace Arbor.NuGet.Tests.Integration
     ]
   }";
 
-                UPath versionJsonPath = UPath.Combine(versionTempDirectory.Directory.Path, Guid.NewGuid() + "_version.json");
+                var versionJsonPath = UPath.Combine(versionTempDirectory.Directory.Path, Guid.NewGuid() + "_version.json");
 
                 await fileSystem.WriteAllTextAsync(versionJsonPath, jsonVersionFileContent, cancellationToken: cts.Token);
 
@@ -160,6 +160,67 @@ namespace Arbor.NuGet.Tests.Integration
                                 "--package-id",
                                 "Arbor.Sample",
                                 "--version-file",
+                                versionJsonPath.FullName
+                            };
+
+                using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
+                exitCode = await app.ExecuteAsync();
+
+                Assert.Equal(0, exitCode);
+
+                Assert.True(fileSystem.FileExists(outputFile), $"File.Exists(outputFile) {{'{outputFile}'}}");
+
+                string content = await fileSystem.ReadAllTextAsync(outputFile, Encoding.UTF8, cts.Token);
+
+                logger.Information("Nuspec: {NewLine}{Content}", Environment.NewLine, content);
+            }
+
+            Assert.Equal(expected: 0, exitCode);
+        }
+
+        [Fact]
+        public async Task WhenCreatingNuSpecWithMsBuildVersionFileThenVersionShouldBeCorrect()
+        {
+            int exitCode;
+
+            using (var cts = CreateCancellation())
+            {
+                using IFileSystem fileSystem = new PhysicalFileSystem();
+                using var versionTempDirectory = TempDirectory.Create(fileSystem);
+
+                string jsonVersionFileContent = @"<Project>
+ <PropertyGroup>
+   <Version>3.2.1</Version>
+ </PropertyGroup>
+</Project>";
+
+                var versionJsonPath = UPath.Combine(versionTempDirectory.Directory.Path, Guid.NewGuid() + ".Directory.Build.props");
+
+                await fileSystem.WriteAllTextAsync(versionJsonPath, jsonVersionFileContent, cancellationToken: cts.Token);
+
+                using var sourceDirectory = TempDirectory.Create(fileSystem);
+
+                await fileSystem.WriteAllTextAsync(
+                    UPath.Combine(sourceDirectory.Directory.FullName, "test.txt"),
+                    "Hello world",
+                    Encoding.UTF8,
+                    cts.Token);
+
+                using var targetDirectory = TempDirectory.Create(fileSystem);
+                using var logger = CreateLogger();
+                var outputFile = UPath.Combine(targetDirectory.Directory.FullName, "result.nuspec");
+
+                string[] args =
+                {
+                                "nuspec",
+                                "create",
+                                "--source-directory",
+                                $"{sourceDirectory.Directory.FullName}",
+                                "--output-file",
+                                $"{outputFile}",
+                                "--package-id",
+                                "Arbor.Sample",
+                                "--msbuild-version-file",
                                 versionJsonPath.FullName
                             };
 

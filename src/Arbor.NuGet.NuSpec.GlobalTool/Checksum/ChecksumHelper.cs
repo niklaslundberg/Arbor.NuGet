@@ -18,11 +18,6 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Checksum
             [NotNull] DirectoryEntry baseDirectory,
             DirectoryEntry targetDirectory)
         {
-            if (baseDirectory == null)
-            {
-                throw new ArgumentNullException(nameof(baseDirectory));
-            }
-
             var files = baseDirectory.EnumerateFiles("*", SearchOption.AllDirectories).OrderBy(file => file.FullName)
                 .Select(file => file).Select(
                     file => new
@@ -31,16 +26,16 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Checksum
                         sha512Base64Encoded = GetFileHashSha512Base64Encoded(file)
                     }).ToArray();
 
-            string? json = JsonConvert.SerializeObject(new {files}, Formatting.Indented);
+            string json = JsonConvert.SerializeObject(new {files}, Formatting.Indented);
 
             var tempDirectory = new DirectoryEntry(baseDirectory.FileSystem, UPath.Combine(Path.GetTempPath().NormalizePath(), Guid.NewGuid().ToString()))
                 .EnsureExists();
 
             var contentFilesFile = new FileEntry(baseDirectory.FileSystem, UPath.Combine(tempDirectory.FullName, "contentFiles.json"));
 
-            await contentFilesFile.WriteAllTextAsync(json, Encoding.UTF8).ConfigureAwait(false);;
+            await contentFilesFile.WriteAllTextAsync(json, Encoding.UTF8).ConfigureAwait(false);
 
-            string contentFilesFileChecksum = await GetFileHashSha512Base64Encoded(contentFilesFile).ConfigureAwait(false);;
+            string contentFilesFileChecksum = await GetFileHashSha512Base64Encoded(contentFilesFile).ConfigureAwait(false);
 
             var hashFile = new FileEntry(baseDirectory.FileSystem, UPath.Combine(tempDirectory.FullName, "contentFiles.json.sha512"));
 

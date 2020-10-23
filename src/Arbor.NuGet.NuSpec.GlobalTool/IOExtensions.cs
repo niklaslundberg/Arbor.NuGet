@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
-using JetBrains.Annotations;
 using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool
@@ -34,6 +33,15 @@ namespace Arbor.NuGet.NuSpec.GlobalTool
             await WriteAllTextAsync(stream, text, encoding, cancellationToken)
                 .ConfigureAwait(continueOnCapturedContext: false);
         }
+        public static async Task WriteAllTextAsync(this Stream stream,
+            string text,
+            Encoding? encoding = null,
+            CancellationToken cancellationToken = default)
+        {
+            await using var writer = new StreamWriter(stream, encoding ?? Encoding.UTF8, leaveOpen: false);
+
+            await writer.WriteAsync(text.AsMemory(), cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+        }
 
         public static async Task<string> ReadAllTextAsync(this Stream stream,
             Encoding? encoding = null,
@@ -62,31 +70,6 @@ namespace Arbor.NuGet.NuSpec.GlobalTool
 
             return await ReadAllTextAsync(stream, encoding, cancellationToken)
                 .ConfigureAwait(continueOnCapturedContext: false);
-        }
-
-        public static async Task WriteAllTextAsync(this Stream stream,
-            string text,
-            Encoding? encoding = null,
-            CancellationToken cancellationToken = default)
-        {
-            await using var writer = new StreamWriter(stream, encoding ?? Encoding.UTF8, leaveOpen: false);
-
-            await writer.WriteAsync(text).ConfigureAwait(continueOnCapturedContext: false);
-        }
-
-        internal static UPath NormalizeFullPath([NotNull] this string path)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(path));
-            }
-
-            if (!UPath.TryParse(path, out var pathInfo))
-            {
-                throw new InvalidOperationException("Could not parse path as an absolute path");
-            }
-
-            return pathInfo;
         }
     }
 }
