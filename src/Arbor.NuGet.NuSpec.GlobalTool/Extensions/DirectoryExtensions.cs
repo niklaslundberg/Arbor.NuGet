@@ -9,13 +9,13 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Extensions
     {
         public static void DeleteIfExists(this DirectoryEntry? directoryInfo, bool recursive = true)
         {
+            if (directoryInfo is null)
+            {
+                return;
+            }
+
             try
             {
-                if (directoryInfo is null)
-                {
-                    return;
-                }
-
                 if (directoryInfo.Exists)
                 {
                     FileEntry[] fileInfos;

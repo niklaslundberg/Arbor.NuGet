@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Arbor.FS;
 using Arbor.NuGet.NuSpec.GlobalTool.Checksum;
 using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
 using Arbor.Processing;
@@ -82,11 +81,14 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
                 Environment.NewLine,
                 fileList.Select(file => NuSpecHelper.IncludedFile(file, packageDirectory)));
 
-            var targetDirectory = new FileEntry(packageConfiguration.SourceDirectory.FileSystem, packageConfiguration.OutputFile).Directory!;
+            var targetDirectory =
+                new FileEntry(packageConfiguration.SourceDirectory.FileSystem, packageConfiguration.OutputFile)
+                    .Directory!;
 
             targetDirectory.EnsureExists();
 
-            var contentFilesInfo = await ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory).ConfigureAwait(false);
+            var contentFilesInfo = await ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory)
+                .ConfigureAwait(continueOnCapturedContext: false);
 
             string contentFileListFile =
                 $@"<file src=""{contentFilesInfo.ContentFilesFile}"" target=""{contentFilesInfo.ContentFilesFile}"" />";
@@ -131,20 +133,19 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
             _logger.Information("{NuSpec}", nuspecContent);
 
-            var tempDir = new DirectoryEntry( packageConfiguration.SourceDirectory.FileSystem, UPath.Combine(Path.GetTempPath().NormalizePath(), $"Arbor.NuGet_{DateTime.Now.Ticks}"))
-                .EnsureExists();
+            await using var tempDir = TempDirectory.Create(packageConfiguration.SourceDirectory.FileSystem,
+                $"Arbor.NuGet_{Guid.NewGuid()}");
 
-            var nuspecTempFile = UPath.Combine(tempDir.FullName, $"{packageId}.nuspec");
+            var nuspecTempFile = UPath.Combine(tempDir.Directory.FullName, $"{packageId}.nuspec");
 
-            await tempDir.FileSystem.WriteAllTextAsync(nuspecTempFile, nuspecContent, Encoding.UTF8, cancellationToken)
+            tempDir.Directory.FileSystem.DeleteFile(nuspecTempFile);
+
+            await tempDir.Directory.FileSystem
+                .WriteAllTextAsync(nuspecTempFile, nuspecContent, Encoding.UTF8, cancellationToken)
                 .ConfigureAwait(continueOnCapturedContext: false);
 
-            var tempFile = tempDir.FileSystem.GetFileEntry(nuspecTempFile);
-            tempFile.CopyTo(packageConfiguration.OutputFile, true);
-
-            tempFile.Delete();
-
-            tempDir.DeleteIfExists();
+            var tempFile = tempDir.Directory.FileSystem.GetFileEntry(nuspecTempFile);
+            tempFile.CopyTo(packageConfiguration.OutputFile, overwrite: true);
 
             return ExitCode.Success;
         }
