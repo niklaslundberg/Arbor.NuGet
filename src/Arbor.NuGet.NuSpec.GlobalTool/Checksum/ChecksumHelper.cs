@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -18,41 +19,54 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Checksum
             [NotNull] DirectoryEntry baseDirectory,
             DirectoryEntry targetDirectory)
         {
-            if (baseDirectory == null)
+            var fileEntries = baseDirectory.EnumerateFiles("*", SearchOption.AllDirectories)
+                .OrderBy(file => file.FullName)
+                .Select(file => file);
+
+            var files = new List<(string, string)>();
+
+            foreach (var fileEntry in fileEntries)
             {
-                throw new ArgumentNullException(nameof(baseDirectory));
+                string fileHashSha512Base64Encoded = await GetFileHashSha512Base64Encoded(fileEntry)
+                    .ConfigureAwait(continueOnCapturedContext: false);
+
+                string internalFullPath = fileEntry.FileSystem.ConvertPathToInternal(fileEntry.Path);
+
+                string internalBaseDirectoryFullName = fileEntry.FileSystem.ConvertPathToInternal(baseDirectory.Path);
+
+                string file = internalFullPath[internalBaseDirectoryFullName.Length..];
+
+                files.Add((file, fileHashSha512Base64Encoded));
             }
 
-            var files = baseDirectory.EnumerateFiles("*", SearchOption.AllDirectories).OrderBy(file => file.FullName)
-                .Select(file => file).Select(
-                    file => new
-                    {
-                        file = file.FullName[baseDirectory.FullName.Length..],
-                        sha512Base64Encoded = GetFileHashSha512Base64Encoded(file)
-                    }).ToArray();
+            string json = JsonConvert.SerializeObject(new {files}, Formatting.Indented);
 
-            string? json = JsonConvert.SerializeObject(new {files}, Formatting.Indented);
-
-            var tempDirectory = new DirectoryEntry(baseDirectory.FileSystem, UPath.Combine(Path.GetTempPath().NormalizePath(), Guid.NewGuid().ToString()))
+            var tempDirectory = new DirectoryEntry(baseDirectory.FileSystem,
+                    UPath.Combine(Path.GetTempPath().NormalizePath(), Guid.NewGuid().ToString()))
                 .EnsureExists();
 
-            var contentFilesFile = new FileEntry(baseDirectory.FileSystem, UPath.Combine(tempDirectory.FullName, "contentFiles.json"));
+            var contentFilesFile = new FileEntry(baseDirectory.FileSystem,
+                UPath.Combine(tempDirectory.FullName, "contentFiles.json"));
 
-            await contentFilesFile.WriteAllTextAsync(json, Encoding.UTF8).ConfigureAwait(false);;
+            await contentFilesFile.WriteAllTextAsync(json, Encoding.UTF8)
+                .ConfigureAwait(continueOnCapturedContext: false);
 
-            string contentFilesFileChecksum = await GetFileHashSha512Base64Encoded(contentFilesFile).ConfigureAwait(false);;
+            string contentFilesFileChecksum = await GetFileHashSha512Base64Encoded(contentFilesFile)
+                .ConfigureAwait(continueOnCapturedContext: false);
 
-            var hashFile = new FileEntry(baseDirectory.FileSystem, UPath.Combine(tempDirectory.FullName, "contentFiles.json.sha512"));
+            var hashFile = new FileEntry(baseDirectory.FileSystem,
+                UPath.Combine(tempDirectory.FullName, "contentFiles.json.sha512"));
 
-            await hashFile.WriteAllTextAsync(contentFilesFileChecksum, Encoding.UTF8).ConfigureAwait(false);
+            await hashFile.WriteAllTextAsync(contentFilesFileChecksum, Encoding.UTF8)
+                .ConfigureAwait(continueOnCapturedContext: false);
 
             string hashFileName = hashFile.Name;
             var hashTargetPath = UPath.Combine(targetDirectory.FullName, hashFileName);
-            hashFile.CopyTo(hashTargetPath, true);
+            hashFile.CopyTo(hashTargetPath, overwrite: true);
 
             string? contentFilesFileName = contentFilesFile.Name;
             var contentFilesTargetPath = UPath.Combine(targetDirectory.FullName, contentFilesFileName);
-            contentFilesFile.CopyTo(contentFilesTargetPath, true);
+            contentFilesFile.CopyTo(contentFilesTargetPath, overwrite: true);
 
             var fileListWithChecksumFile = new FileListWithChecksumFile(contentFilesFileName, hashFileName);
 

@@ -5,6 +5,7 @@ using System.CommandLine.Invocation;
 using System.Threading;
 using System.Threading.Tasks;
 using Arbor.NuGet.NuSpec.GlobalTool.CommandLine;
+using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
 using Arbor.NuGet.NuSpec.GlobalTool.Logging;
 using Arbor.Processing;
 using Serilog;
@@ -57,7 +58,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Application
 
                 return new ExitCode(exitCode);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!ex.IsFatal())
             {
                 _logger.Error(ex, "Could not create nuspec");
                 return ExitCode.Failure;
@@ -67,7 +68,9 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Application
         private Parser CreateParser()
         {
             var parser = new CommandLineBuilder()
-                .AddCommand(CommandDefinitions.Tool(_logger, _fileSystem, _cancellationTokenSource.Token)).UseVersionOption()
+                .AddCommand(NuSpecCommandDefinition.Tool(_logger, _fileSystem, _cancellationTokenSource.Token))
+                .AddCommand(PackCommandDefinition.Tool(_logger, _fileSystem, _cancellationTokenSource.Token))
+                .UseVersionOption()
                 .UseHelp().UseParseDirective().UseDebugDirective().UseSuggestDirective().RegisterWithDotnetSuggest()
                 .UseParseErrorReporting().UseExceptionHandler().Build();
 

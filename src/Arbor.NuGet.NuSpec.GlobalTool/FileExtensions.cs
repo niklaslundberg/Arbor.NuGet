@@ -4,12 +4,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
-using JetBrains.Annotations;
 using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool
 {
-    internal static class IOExtensions
+    internal static class FileExtensions
     {
         public static Task WriteAllTextAsync(this IFileSystem fileSystem,
             UPath path,
@@ -35,13 +34,27 @@ namespace Arbor.NuGet.NuSpec.GlobalTool
                 .ConfigureAwait(continueOnCapturedContext: false);
         }
 
-        public static async Task<string> ReadAllTextAsync(this Stream stream,
+        public static async Task WriteAllTextAsync(this Stream stream,
+            string text,
             Encoding? encoding = null,
             CancellationToken cancellationToken = default)
         {
-            using var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, leaveOpen: false);
+            await using var writer = new StreamWriter(stream, encoding ?? Encoding.UTF8, leaveOpen: false);
 
-            return await reader.ReadToEndAsync().ConfigureAwait(continueOnCapturedContext: false);
+            await writer.WriteAsync(text.AsMemory(), cancellationToken)
+                .ConfigureAwait(continueOnCapturedContext: false);
+        }
+
+        public static Task<string> ReadAllTextAsync(this Stream stream,
+            Encoding? encoding = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                throw new OperationCanceledException("Cancellation is requested");
+            }
+
+            return ReadAllTextInternalAsync(stream, encoding);
         }
 
         public static Task<string> ReadAllTextAsync(this IFileSystem fileSystem,
@@ -64,29 +77,12 @@ namespace Arbor.NuGet.NuSpec.GlobalTool
                 .ConfigureAwait(continueOnCapturedContext: false);
         }
 
-        public static async Task WriteAllTextAsync(this Stream stream,
-            string text,
-            Encoding? encoding = null,
-            CancellationToken cancellationToken = default)
+        private static async Task<string> ReadAllTextInternalAsync(this Stream stream,
+            Encoding? encoding = null)
         {
-            await using var writer = new StreamWriter(stream, encoding ?? Encoding.UTF8, leaveOpen: false);
+            using var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, leaveOpen: false);
 
-            await writer.WriteAsync(text).ConfigureAwait(continueOnCapturedContext: false);
-        }
-
-        internal static UPath NormalizeFullPath([NotNull] this string path)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(path));
-            }
-
-            if (!UPath.TryParse(path, out var pathInfo))
-            {
-                throw new InvalidOperationException("Could not parse path as an absolute path");
-            }
-
-            return pathInfo;
+            return await reader.ReadToEndAsync().ConfigureAwait(continueOnCapturedContext: false);
         }
     }
 }

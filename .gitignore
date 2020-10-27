@@ -194,3 +194,4 @@ _patchedAssemblyInfos
 *.vspx
 *.ncrunchproject
 **/BenchmarkDotNet.Artifacts/**/*
+src/Arbor.NuGet.NuSpec.GlobalTool/Properties/launchSettings.json

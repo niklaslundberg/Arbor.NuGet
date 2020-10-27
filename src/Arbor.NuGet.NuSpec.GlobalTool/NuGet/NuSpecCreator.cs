@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Arbor.FS;
 using Arbor.NuGet.NuSpec.GlobalTool.Checksum;
 using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
 using Arbor.Processing;
@@ -19,7 +18,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
         private readonly ILogger _logger;
 
-        public NuSpecCreator(ILogger logger) => _logger = logger;
+        private NuSpecCreator(ILogger logger) => _logger = logger;
 
         public static async Task<int> CreateSpecificationAsync(
             PackageDefinition packageDefinition,
@@ -64,37 +63,40 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
                 return ExitCode.Failure;
             }
 
-            string? packageId = packageConfiguration.PackageDefinition.PackageId.Id;
+            string packageId = packageConfiguration.PackageDefinition.PackageId.Id;
             string? normalizedVersion = packageConfiguration.PackageDefinition.SemanticVersion.ToNormalizedString();
-            string? description = packageId;
-            string? summary = packageId;
-            const string Language = "en-US";
-            const string ProjectUrl = "http://nuget.org";
-            const string IconUrl = "http://nuget.org";
-            const string RequireLicenseAcceptance = "false";
-            const string LicenseUrl = "http://nuget.org";
-            string? copyright = "Undefined";
-            string? tags = string.Empty;
+            string description = packageId;
+            string summary = packageId;
+            const string language = "en-US";
+            const string projectUrl = "http://nuget.org";
+            const string iconUrl = "http://nuget.org";
+            const string requireLicenseAcceptance = "false";
+            const string licenseUrl = "http://nuget.org";
+            string copyright = "Undefined";
+            string tags = string.Empty;
 
             var fileList = packageDirectory.EnumerateFiles("*", SearchOption.AllDirectories);
 
-            string? files = string.Join(
+            string files = string.Join(
                 Environment.NewLine,
-                fileList.Select(file => NuSpecHelper.IncludedFile(file.FullName, packageDirectory.FullName)));
+                fileList.Select(file => NuSpecHelper.IncludedFile(file, packageDirectory)));
 
-            var targetDirectory = new FileEntry(packageConfiguration.SourceDirectory.FileSystem, packageConfiguration.OutputFile).Directory!;
+            var targetDirectory =
+                new FileEntry(packageConfiguration.SourceDirectory.FileSystem, packageConfiguration.OutputFile)
+                    .Directory!;
 
             targetDirectory.EnsureExists();
 
-            var contentFilesInfo = await ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory).ConfigureAwait(false);
+            var contentFilesInfo = await ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory)
+                .ConfigureAwait(continueOnCapturedContext: false);
 
-            string? contentFileListFile =
+            string contentFileListFile =
                 $@"<file src=""{contentFilesInfo.ContentFilesFile}"" target=""{contentFilesInfo.ContentFilesFile}"" />";
 
-            string? checksumFile =
+            string checksumFile =
                 $@"<file src=""{contentFilesInfo.ChecksumFile}"" target=""{contentFilesInfo.ChecksumFile}"" />";
 
-            string? nuspecContent = $@"<?xml version=""1.0""?>
+            string nuspecContent = $@"<?xml version=""1.0""?>
 <package>
     <metadata>
         <id>{packageId}</id>
@@ -110,11 +112,11 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
         <summary>
             {summary}
         </summary>
-        <language>{Language}</language>
-        <projectUrl>{ProjectUrl}</projectUrl>
-        <iconUrl>{IconUrl}</iconUrl>
-        <requireLicenseAcceptance>{RequireLicenseAcceptance}</requireLicenseAcceptance>
-        <licenseUrl>{LicenseUrl}</licenseUrl>
+        <language>{language}</language>
+        <projectUrl>{projectUrl}</projectUrl>
+        <iconUrl>{iconUrl}</iconUrl>
+        <requireLicenseAcceptance>{requireLicenseAcceptance}</requireLicenseAcceptance>
+        <licenseUrl>{licenseUrl}</licenseUrl>
         <copyright>{copyright}</copyright>
         <dependencies>
 
@@ -131,20 +133,19 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
             _logger.Information("{NuSpec}", nuspecContent);
 
-            var tempDir = new DirectoryEntry( packageConfiguration.SourceDirectory.FileSystem, UPath.Combine(Path.GetTempPath().NormalizePath(), $"Arbor.NuGet_{DateTime.Now.Ticks}"))
-                .EnsureExists();
+            await using var tempDir = TempDirectory.Create(packageConfiguration.SourceDirectory.FileSystem,
+                $"Arbor.NuGet_{Guid.NewGuid()}");
 
-            var nuspecTempFile = UPath.Combine(tempDir.FullName, $"{packageId}.nuspec");
+            var nuspecTempFile = UPath.Combine(tempDir.Directory.FullName, $"{packageId}.nuspec");
 
-            await tempDir.FileSystem.WriteAllTextAsync(nuspecTempFile, nuspecContent, Encoding.UTF8, cancellationToken)
+            tempDir.Directory.FileSystem.DeleteFile(nuspecTempFile);
+
+            await tempDir.Directory.FileSystem
+                .WriteAllTextAsync(nuspecTempFile, nuspecContent, Encoding.UTF8, cancellationToken)
                 .ConfigureAwait(continueOnCapturedContext: false);
 
-            var tempFile = tempDir.FileSystem.GetFileEntry(nuspecTempFile);
-            tempFile.CopyTo(packageConfiguration.OutputFile, true);
-
-            tempFile.Delete();
-
-            tempDir.DeleteIfExists();
+            var tempFile = tempDir.Directory.FileSystem.GetFileEntry(nuspecTempFile);
+            tempFile.CopyTo(packageConfiguration.OutputFile, overwrite: true);
 
             return ExitCode.Success;
         }
