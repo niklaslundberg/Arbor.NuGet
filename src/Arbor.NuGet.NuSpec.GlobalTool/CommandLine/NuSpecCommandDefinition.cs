@@ -62,7 +62,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
         private static readonly Option MsBuildVersionFile =
             new Option(
                 "--msbuild-version-file",
-                Strings.VersionFile,
+                Strings.MsBuildVersionFile,
                 new Argument<string>
                 {
                     Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
@@ -71,7 +71,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
         private static readonly Option PackageDirectory =
             new Option(
                 "--package-directory",
-                "NuGet package directory output path",
+                Strings.PackageOutputDirectory,
                 new Argument<string>
                 {
                     Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)

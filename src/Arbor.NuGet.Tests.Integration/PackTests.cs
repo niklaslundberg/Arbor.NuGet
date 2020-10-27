@@ -28,14 +28,14 @@ namespace Arbor.NuGet.Tests.Integration
 
 
         [Fact]
-        public async Task WhenCreatingNuSpecWithValidArgsThenExitCodeShouldBe0()
+        public async Task WhenCreatingNuGetPackageWithValidArgsThenExitCodeShouldBe0()
         {
             int exitCode;
 
             using (var cts = CreateCancellation())
             {
                 using IFileSystem fileSystem = new PhysicalFileSystem();
-                using var sourceDirectory = TempDirectory.Create(fileSystem);
+                await using var sourceDirectory = TempDirectory.Create(fileSystem);
 
                 await fileSystem.WriteAllTextAsync(
                     UPath.Combine(sourceDirectory.Directory.FullName, "test.txt"),
@@ -43,12 +43,15 @@ namespace Arbor.NuGet.Tests.Integration
                     Encoding.UTF8,
                     cts.Token);
 
-                using var targetDirectory = TempDirectory.Create(fileSystem);
+                await using var targetDirectory = TempDirectory.Create(fileSystem);
                 using var logger = CreateLogger();
                 var outputFile = UPath.Combine(targetDirectory.Directory.Path, "result.nuspec");
 
-                using var packageTargetDirectory = TempDirectory.Create(fileSystem);
-                var packageFile = UPath.Combine(packageTargetDirectory.Directory.Path, "result.nupkg");
+                await using var packageTargetDirectory = TempDirectory.Create(fileSystem);
+
+                await using var outputDirectory = TempDirectory.Create(fileSystem);
+
+                var packageFile = outputDirectory.Directory.Path / "Arbor.Sample.1.2.3.nupkg";
 
                 string[] args =
                 {
@@ -71,7 +74,7 @@ namespace Arbor.NuGet.Tests.Integration
 
                 string[] packArgs =
                 {
-                    "pack", "nuspec", "--nuspec-file", $"{outputFile}", "--output-file", $"{packageFile}"
+                    "pack", "nuspec", "--nuspec-file", $"{outputFile}", $"--package-directory={outputDirectory.Directory.Path}"
                 };
 
                 Assert.True(fileSystem.FileExists(outputFile));

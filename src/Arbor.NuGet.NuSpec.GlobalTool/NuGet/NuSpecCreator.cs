@@ -67,11 +67,11 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
             string? normalizedVersion = packageConfiguration.PackageDefinition.SemanticVersion.ToNormalizedString();
             string description = packageId;
             string summary = packageId;
-            const string Language = "en-US";
-            const string ProjectUrl = "http://nuget.org";
-            const string IconUrl = "http://nuget.org";
-            const string RequireLicenseAcceptance = "false";
-            const string LicenseUrl = "http://nuget.org";
+            const string language = "en-US";
+            const string projectUrl = "http://nuget.org";
+            const string iconUrl = "http://nuget.org";
+            const string requireLicenseAcceptance = "false";
+            const string licenseUrl = "http://nuget.org";
             string copyright = "Undefined";
             string tags = string.Empty;
 
@@ -112,11 +112,11 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
         <summary>
             {summary}
         </summary>
-        <language>{Language}</language>
-        <projectUrl>{ProjectUrl}</projectUrl>
-        <iconUrl>{IconUrl}</iconUrl>
-        <requireLicenseAcceptance>{RequireLicenseAcceptance}</requireLicenseAcceptance>
-        <licenseUrl>{LicenseUrl}</licenseUrl>
+        <language>{language}</language>
+        <projectUrl>{projectUrl}</projectUrl>
+        <iconUrl>{iconUrl}</iconUrl>
+        <requireLicenseAcceptance>{requireLicenseAcceptance}</requireLicenseAcceptance>
+        <licenseUrl>{licenseUrl}</licenseUrl>
         <copyright>{copyright}</copyright>
         <dependencies>
 

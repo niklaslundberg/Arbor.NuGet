@@ -34,7 +34,7 @@ namespace Arbor.NuGet.Tests.Integration
         {
             string[] args = {"nuspec", "create", "--source-directory", @"C:\temp"};
 
-            using var app = new App(args, CreateLogger(), new MemoryFileSystem(),  CreateCancellation());
+            using var app = new App(args, CreateLogger(), new MemoryFileSystem(), CreateCancellation());
             var exitCode = await app.ExecuteAsync();
 
             Assert.NotEqual(expected: 0, exitCode);
@@ -43,7 +43,7 @@ namespace Arbor.NuGet.Tests.Integration
         [Fact]
         public async Task WhenCreatingNuSpecWithMissingCommandThenExitCodeShouldNotBe0()
         {
-            using var app = new App(new[] { "nuspec" }, CreateLogger(), new MemoryFileSystem(), CreateCancellation());
+            using var app = new App(new[] {"nuspec"}, CreateLogger(), new MemoryFileSystem(), CreateCancellation());
             var exitCode = await app.ExecuteAsync();
 
             Assert.NotEqual(expected: 0, exitCode);
@@ -82,17 +82,17 @@ namespace Arbor.NuGet.Tests.Integration
 
                 string[] args =
                 {
-                                "nuspec",
-                                "create",
-                                "--source-directory",
-                                $"{sourceDirectory.Directory.FullName}",
-                                "--output-file",
-                                $"{outputFile}",
-                                "--package-id",
-                                "Arbor.Sample",
-                                "--package-version",
-                                "1.2.3"
-                            };
+                    "nuspec",
+                    "create",
+                    "--source-directory",
+                    $"{sourceDirectory.Directory.FullName}",
+                    "--output-file",
+                    $"{outputFile}",
+                    "--package-id",
+                    "Arbor.Sample",
+                    "--package-version",
+                    "1.2.3"
+                };
 
                 using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
                 exitCode = await app.ExecuteAsync();
@@ -146,7 +146,7 @@ namespace Arbor.NuGet.Tests.Integration
             using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
             int exitCode = await app.ExecuteAsync();
 
-            Assert.Equal(0, exitCode);
+            Assert.Equal(expected: 0, exitCode);
 
             Assert.True(fileSystem.FileExists(outputFile), $"File.Exists(outputFile) {{'{outputFile}'}}");
 
@@ -160,18 +160,18 @@ namespace Arbor.NuGet.Tests.Integration
             Assert.True(fileSystem.FileExists(packagePath), $"File.Exists(packagePath) {{'{packagePath}'}}");
             await using var packageStream = fileSystem.OpenFile(packagePath, FileMode.Open, FileAccess.Read);
 
-            using PackageArchiveReader reader = new PackageArchiveReader(packageStream);
+            using var reader = new PackageArchiveReader(packageStream);
 
-            var files = reader.GetFiles()
+            string[] files = reader.GetFiles()
                 .Where(file => !file.StartsWith("[")
-                               && ! file.StartsWith("_")
-                               && ! file.StartsWith("package/")
-                               )
+                               && !file.StartsWith("_")
+                               && !file.StartsWith("package/")
+                )
                 .ToArray();
 
             logger.Information("Files in package: @{Files}", files);
 
-            Assert.Equal(4, files.Length);
+            Assert.Equal(expected: 4, files.Length);
             Assert.Contains("Content/test.txt", files);
             Assert.Contains("contentFiles.json.sha512", files);
             Assert.Contains("contentFiles.json", files);
@@ -206,9 +206,11 @@ namespace Arbor.NuGet.Tests.Integration
     ]
   }";
 
-                var versionJsonPath = UPath.Combine(versionTempDirectory.Directory.Path, Guid.NewGuid() + "_version.json");
+                var versionJsonPath =
+                    UPath.Combine(versionTempDirectory.Directory.Path, Guid.NewGuid() + "_version.json");
 
-                await fileSystem.WriteAllTextAsync(versionJsonPath, jsonVersionFileContent, cancellationToken: cts.Token);
+                await fileSystem.WriteAllTextAsync(versionJsonPath, jsonVersionFileContent,
+                    cancellationToken: cts.Token);
 
                 await using var sourceDirectory = TempDirectory.Create(fileSystem);
 
@@ -224,22 +226,22 @@ namespace Arbor.NuGet.Tests.Integration
 
                 string[] args =
                 {
-                                "nuspec",
-                                "create",
-                                "--source-directory",
-                                $"{sourceDirectory.Directory.FullName}",
-                                "--output-file",
-                                $"{outputFile}",
-                                "--package-id",
-                                "Arbor.Sample",
-                                "--version-file",
-                                versionJsonPath.FullName
-                            };
+                    "nuspec",
+                    "create",
+                    "--source-directory",
+                    $"{sourceDirectory.Directory.FullName}",
+                    "--output-file",
+                    $"{outputFile}",
+                    "--package-id",
+                    "Arbor.Sample",
+                    "--version-file",
+                    versionJsonPath.FullName
+                };
 
                 using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
                 exitCode = await app.ExecuteAsync();
 
-                Assert.Equal(0, exitCode);
+                Assert.Equal(expected: 0, exitCode);
 
                 Assert.True(fileSystem.FileExists(outputFile), $"File.Exists(outputFile) {{'{outputFile}'}}");
 
@@ -267,9 +269,11 @@ namespace Arbor.NuGet.Tests.Integration
  </PropertyGroup>
 </Project>";
 
-                var versionJsonPath = UPath.Combine(versionTempDirectory.Directory.Path, Guid.NewGuid() + ".Directory.Build.props");
+                var versionJsonPath = UPath.Combine(versionTempDirectory.Directory.Path,
+                    Guid.NewGuid() + ".Directory.Build.props");
 
-                await fileSystem.WriteAllTextAsync(versionJsonPath, jsonVersionFileContent, cancellationToken: cts.Token);
+                await fileSystem.WriteAllTextAsync(versionJsonPath, jsonVersionFileContent,
+                    cancellationToken: cts.Token);
 
                 await using var sourceDirectory = TempDirectory.Create(fileSystem);
 
@@ -285,22 +289,22 @@ namespace Arbor.NuGet.Tests.Integration
 
                 string[] args =
                 {
-                                "nuspec",
-                                "create",
-                                "--source-directory",
-                                $"{sourceDirectory.Directory.FullName}",
-                                "--output-file",
-                                $"{outputFile}",
-                                "--package-id",
-                                "Arbor.Sample",
-                                "--msbuild-version-file",
-                                versionJsonPath.FullName
-                            };
+                    "nuspec",
+                    "create",
+                    "--source-directory",
+                    $"{sourceDirectory.Directory.FullName}",
+                    "--output-file",
+                    $"{outputFile}",
+                    "--package-id",
+                    "Arbor.Sample",
+                    "--msbuild-version-file",
+                    versionJsonPath.FullName
+                };
 
                 using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
                 exitCode = await app.ExecuteAsync();
 
-                Assert.Equal(0, exitCode);
+                Assert.Equal(expected: 0, exitCode);
 
                 Assert.True(fileSystem.FileExists(outputFile), $"File.Exists(outputFile) {{'{outputFile}'}}");
 
@@ -315,7 +319,9 @@ namespace Arbor.NuGet.Tests.Integration
         [Fact]
         public async Task WhenRunningWithWithEmptyArgsThenExitCodeShouldNotBe0()
         {
-            using var app = new App(Array.Empty<string>(), CreateLogger(), new MemoryFileSystem(),  CreateCancellation());
+            using var app = new App(Array.Empty<string>(), CreateLogger(), new MemoryFileSystem(),
+                CreateCancellation());
+
             var exitCode = await app.ExecuteAsync();
 
             Assert.NotEqual(expected: 0, exitCode);

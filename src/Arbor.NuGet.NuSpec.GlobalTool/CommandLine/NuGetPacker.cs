@@ -21,19 +21,18 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                 throw new ArgumentException($"The nuspec file {nuSpecFile.Path} does not exist");
             }
 
-            return PackNuSpecInternal(nuSpecFile, packagePath, logger, cancellationToken);
-        }
-
-        private static async Task<int> PackNuSpecInternal(FileEntry nuSpecFile,
-            UPath packagePath,
-            ILogger logger,
-            CancellationToken cancellationToken)
-        {
             if (cancellationToken.IsCancellationRequested)
             {
                 throw new OperationCanceledException("Cancellation is requested");
             }
 
+            return PackNuSpecInternal(nuSpecFile, packagePath, logger);
+        }
+
+        private static async Task<int> PackNuSpecInternal(FileEntry nuSpecFile,
+            UPath packagePath,
+            ILogger logger)
+        {
             new DirectoryEntry(nuSpecFile.FileSystem, packagePath.GetDirectory()).EnsureExists();
 
             await using var nuspecStream = nuSpecFile.Open(FileMode.Open, FileAccess.Read);
