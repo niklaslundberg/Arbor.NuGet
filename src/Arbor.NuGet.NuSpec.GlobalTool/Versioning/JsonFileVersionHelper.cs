@@ -9,7 +9,7 @@ using NuGet.Versioning;
 using Serilog;
 using Zio;
 
-namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
+namespace Arbor.NuGet.NuSpec.GlobalTool.Versioning
 {
     internal static class JsonFileVersionHelper
     {

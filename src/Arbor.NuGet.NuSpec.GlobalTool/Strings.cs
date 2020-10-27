@@ -1,4 +1,4 @@
-﻿namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
+﻿namespace Arbor.NuGet.NuSpec.GlobalTool
 {
     internal static class Strings
     {

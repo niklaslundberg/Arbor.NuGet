@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Arbor.FS;
 using Arbor.NuGet.NuSpec.GlobalTool.NuGet;
+using Arbor.NuGet.NuSpec.GlobalTool.Versioning;
 using NuGet.Versioning;
 using Serilog;
 using Zio;
@@ -14,7 +15,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
 {
     internal static class NuSpecCommandDefinition
     {
-        private static readonly Option SourceDir =
+        private static readonly Option SourceDirectory =
             new Option(
                 "--source-directory",
                 Strings.SourceDirectoryDescription,
@@ -145,7 +146,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                     Strings.CreateDescription,
                     new[]
                     {
-                        SourceDir,
+                        SourceDirectory,
                         OutputFile,
                         PackageId,
                         PackageVersion,
@@ -154,95 +155,112 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                         PackageDirectory
                     },
                     handler: CommandHandler.Create<string, string, string, string, string, string, string>(
-                        BindAndValidate));
+                        (sourceDirectory,
+                                outputFile,
+                                packageId,
+                                packageVersion,
+                                versionFile,
+                                msBuildVersionFile,
+                                packageDirectory) =>
+                            BindAndValidate(sourceDirectory, outputFile, packageId, packageVersion, versionFile,
+                                msBuildVersionFile, packageDirectory, logger, fileSystem, cancellationToken)));
             }
 
-            Task<int> BindAndValidate(string? sourceDirectory,
-                string? outputFile,
-                string? packageId,
-                string? packageVersion,
-                string? versionFile,
-                string? msBuildVersionFile,
-                string? packageDirectory)
-            {
-                if (string.IsNullOrWhiteSpace(sourceDirectory))
-                {
-                    logger.Error("Missing expected --{Arg} argument", SourceDir.Aliases.FirstOrDefault());
-                    return Task.FromResult(result: 1);
-                }
-
-                if (string.IsNullOrWhiteSpace(outputFile))
-                {
-                    logger.Error("Missing expected --{Arg} argument", OutputFile.Aliases.FirstOrDefault());
-                    return Task.FromResult(result: 2);
-                }
-
-                if (string.IsNullOrWhiteSpace(packageId))
-                {
-                    logger.Error("Missing expected --{Arg} argument", PackageId.Aliases.FirstOrDefault());
-                    return Task.FromResult(result: 3);
-                }
-
-                if (string.IsNullOrWhiteSpace(packageVersion) &&
-                    string.IsNullOrWhiteSpace(versionFile) &&
-                    string.IsNullOrWhiteSpace(msBuildVersionFile))
-                {
-                    logger.Error("Missing expected --{Arg} argument", PackageVersion.Aliases.FirstOrDefault());
-                    return Task.FromResult(result: 4);
-                }
-
-                return Bind(sourceDirectory, outputFile, packageId, packageVersion, versionFile, msBuildVersionFile,
-                    packageDirectory);
-            }
-
-            async Task<int> Bind(string sourceDirectory,
-                string outputFile,
-                string packageId,
-                string? packageVersion,
-                string? versionFile,
-                string? msBuildVersionFile,
-                string? packageDirectory)
-            {
-                var version = GetVersion(packageVersion, versionFile, msBuildVersionFile, fileSystem, logger);
-
-                var packageDefinition = new PackageDefinition(
-                    new PackageId(packageId),
-                    version);
-
-                int exitCode = await NuSpecCreator.CreateSpecificationAsync(
-                    packageDefinition,
-                    logger,
-                    new DirectoryEntry(fileSystem, sourceDirectory.NormalizePath()),
-                    outputFile.NormalizePath(),
-                    cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
-
-                if (exitCode != 0)
-                {
-                    return exitCode;
-                }
-
-                if (!string.IsNullOrWhiteSpace(packageDirectory))
-                {
-                    var outputFileEntry = fileSystem.GetFileEntry(outputFile.NormalizePath());
-                    string packageFileName = $"{packageId}.{version.ToNormalizedString()}.nupkg";
-                    var packageFilePath = packageDirectory.NormalizePath() / packageFileName;
-
-                    int packageExitCode = await NuGetPacker.PackNuSpec(
-                        outputFileEntry, packageFilePath, logger,
-                        cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
-
-                    if (packageExitCode != 0)
-                    {
-                        return packageExitCode;
-                    }
-                }
-
-                return exitCode;
-            }
 
             tool.AddCommand(NuSpec());
 
             return tool;
+        }
+
+        private static async Task<int> Bind(
+            string sourceDirectory,
+            string outputFile,
+            string packageId,
+            string? packageVersion,
+            string? versionFile,
+            string? msBuildVersionFile,
+            string? packageDirectory,
+            ILogger logger,
+            IFileSystem fileSystem,
+            CancellationToken cancellationToken)
+        {
+            var version = GetVersion(packageVersion, versionFile, msBuildVersionFile, fileSystem, logger);
+
+            var packageDefinition = new PackageDefinition(
+                new PackageId(packageId),
+                version);
+
+            int exitCode = await NuSpecCreator.CreateSpecificationAsync(
+                packageDefinition,
+                logger,
+                new DirectoryEntry(fileSystem, sourceDirectory.NormalizePath()),
+                outputFile.NormalizePath(),
+                cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+
+            if (exitCode != 0)
+            {
+                return exitCode;
+            }
+
+            if (!string.IsNullOrWhiteSpace(packageDirectory))
+            {
+                var outputFileEntry = fileSystem.GetFileEntry(outputFile.NormalizePath());
+                string packageFileName = $"{packageId}.{version.ToNormalizedString()}.nupkg";
+                var packageFilePath = packageDirectory.NormalizePath() / packageFileName;
+
+                int packageExitCode = await NuGetPacker.PackNuSpec(
+                    outputFileEntry, packageFilePath, logger,
+                    cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+
+                if (packageExitCode != 0)
+                {
+                    return packageExitCode;
+                }
+            }
+
+            return exitCode;
+        }
+
+        private static Task<int> BindAndValidate(
+            string? sourceDirectory,
+            string? outputFile,
+            string? packageId,
+            string? packageVersion,
+            string? versionFile,
+            string? msBuildVersionFile,
+            string? packageDirectory,
+            ILogger logger,
+            IFileSystem fileSystem,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(sourceDirectory))
+            {
+                logger.Error("Missing expected --{Arg} argument", SourceDirectory.Aliases.FirstOrDefault());
+                return Task.FromResult(result: 1);
+            }
+
+            if (string.IsNullOrWhiteSpace(outputFile))
+            {
+                logger.Error("Missing expected --{Arg} argument", OutputFile.Aliases.FirstOrDefault());
+                return Task.FromResult(result: 2);
+            }
+
+            if (string.IsNullOrWhiteSpace(packageId))
+            {
+                logger.Error("Missing expected --{Arg} argument", PackageId.Aliases.FirstOrDefault());
+                return Task.FromResult(result: 3);
+            }
+
+            if (string.IsNullOrWhiteSpace(packageVersion) &&
+                string.IsNullOrWhiteSpace(versionFile) &&
+                string.IsNullOrWhiteSpace(msBuildVersionFile))
+            {
+                logger.Error("Missing expected --{Arg} argument", PackageVersion.Aliases.FirstOrDefault());
+                return Task.FromResult(result: 4);
+            }
+
+            return Bind(sourceDirectory, outputFile, packageId, packageVersion, versionFile, msBuildVersionFile,
+                packageDirectory, logger, fileSystem, cancellationToken);
         }
     }
 }

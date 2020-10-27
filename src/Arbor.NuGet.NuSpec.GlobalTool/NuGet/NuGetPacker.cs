@@ -7,7 +7,7 @@ using NuGet.Packaging;
 using Serilog;
 using Zio;
 
-namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
+namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 {
     internal static class NuGetPacker
     {
