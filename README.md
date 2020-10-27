@@ -6,7 +6,7 @@
 
 ## Development
 [![CI](https://github.com/niklaslundberg/Arbor.NuGet/workflows/CI/badge.svg?branch=develop)](https://github.com/niklaslundberg/Arbor.NuGet/actions?query=workflow%3ACI)
-[![MyGet (with prereleases)](https://img.shields.io/myget/arbor/vpre/Arbor.NuGet.GlobalTool?label=nuget%20preview%20%28myget%29)](https://www.myget.org/F/arbor/api/v2/package/Arbor.NuGet.GlobalTool/0.1.2-build.1603390949)
+[![MyGet (with prereleases)](https://img.shields.io/myget/arbor/vpre/Arbor.NuGet.GlobalTool?label=nuget%20preview%20%28myget%29)](https://www.myget.org/F/arbor/api/v2/package/Arbor.NuGet.GlobalTool)
 
 ## Example usages
 
