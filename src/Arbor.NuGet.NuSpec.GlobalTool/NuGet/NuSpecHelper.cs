@@ -16,9 +16,8 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
             }
 
             string internalTargetPath = file.FileSystem.ConvertPathToInternal(file.Path);
-            string internalBaseDirectoryPath = file.FileSystem.ConvertPathToInternal(baseDirectory.Path);
 
-            string targetFilePath = internalTargetPath[internalBaseDirectoryPath.Length..];
+            string targetFilePath = internalTargetPath[file.FileSystem.ConvertPathToInternal(baseDirectory.Path).Length..];
 
             string fileItem = $@"<file src=""{internalTargetPath}"" target=""Content{Path.DirectorySeparatorChar}{targetFilePath}"" />";
 

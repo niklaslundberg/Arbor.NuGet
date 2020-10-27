@@ -33,6 +33,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool
             await WriteAllTextAsync(stream, text, encoding, cancellationToken)
                 .ConfigureAwait(continueOnCapturedContext: false);
         }
+
         public static async Task WriteAllTextAsync(this Stream stream,
             string text,
             Encoding? encoding = null,
@@ -40,16 +41,20 @@ namespace Arbor.NuGet.NuSpec.GlobalTool
         {
             await using var writer = new StreamWriter(stream, encoding ?? Encoding.UTF8, leaveOpen: false);
 
-            await writer.WriteAsync(text.AsMemory(), cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+            await writer.WriteAsync(text.AsMemory(), cancellationToken)
+                .ConfigureAwait(continueOnCapturedContext: false);
         }
 
-        public static async Task<string> ReadAllTextAsync(this Stream stream,
+        public static Task<string> ReadAllTextAsync(this Stream stream,
             Encoding? encoding = null,
             CancellationToken cancellationToken = default)
         {
-            using var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, leaveOpen: false);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                throw new OperationCanceledException("Cancellation is requested");
+            }
 
-            return await reader.ReadToEndAsync().ConfigureAwait(continueOnCapturedContext: false);
+            return ReadAllTextInternalAsync(stream, encoding);
         }
 
         public static Task<string> ReadAllTextAsync(this IFileSystem fileSystem,
@@ -70,6 +75,14 @@ namespace Arbor.NuGet.NuSpec.GlobalTool
 
             return await ReadAllTextAsync(stream, encoding, cancellationToken)
                 .ConfigureAwait(continueOnCapturedContext: false);
+        }
+
+        private static async Task<string> ReadAllTextInternalAsync(this Stream stream,
+            Encoding? encoding = null)
+        {
+            using var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, leaveOpen: false);
+
+            return await reader.ReadToEndAsync().ConfigureAwait(continueOnCapturedContext: false);
         }
     }
 }

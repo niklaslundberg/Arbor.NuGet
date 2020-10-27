@@ -77,36 +77,38 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                     Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
                 });
 
-        private static SemanticVersion? GetVersion(string? packageVersion,
+        private static SemanticVersion GetVersion(string? packageVersion,
             string? versionFile,
             string? msBuildVersionFile,
             IFileSystem fileSystem,
             ILogger logger)
         {
-            SemanticVersion version;
+            SemanticVersion? version = null;
 
             if (!string.IsNullOrWhiteSpace(packageVersion))
             {
-                if (!SemanticVersion.TryParse(packageVersion, out SemanticVersion parsedVersion))
+                if (SemanticVersion.TryParse(packageVersion, out SemanticVersion parsedVersion))
+                {
+                    version = parsedVersion;
+                }
+                else
                 {
                     logger.Error("Invalid semver '{PackageVersion}'", packageVersion);
-                    return default;
                 }
-
-                version = parsedVersion;
             }
             else if (!string.IsNullOrWhiteSpace(versionFile))
             {
                 var versionFromFile =
                     JsonFileVersionHelper.GetVersionFromJsonFile(versionFile!.NormalizePath(), fileSystem, logger);
 
-                if (versionFromFile is null)
+                if (versionFromFile is {})
+                {
+                    version = versionFromFile;
+                }
+                else
                 {
                     logger.Error("Could not get version from file '{VersionFile}'", versionFile);
-                    return default;
                 }
-
-                version = versionFromFile;
             }
             else
             {
@@ -114,13 +116,19 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                     JsonFileVersionHelper.GetVersionFromMsBuildFile(msBuildVersionFile!.NormalizePath(), fileSystem,
                         logger);
 
-                if (versionFromFile is null)
+                if (versionFromFile is {})
+                {
+                    version = versionFromFile;
+                }
+                else
                 {
                     logger.Error("Could not get version from MSBuild file '{VersionFile}'", versionFile);
-                    return default;
                 }
+            }
 
-                version = versionFromFile;
+            if (version is null)
+            {
+                throw new InvalidOperationException("Could not get version");
             }
 
             return version;
@@ -135,11 +143,21 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                 return new Command(
                     "create",
                     Strings.CreateDescription,
-                    new[] {SourceDir, OutputFile, PackageId, PackageVersion, VersionFile, MsBuildVersionFile, PackageDirectory},
-                    handler: CommandHandler.Create<string, string, string, string, string, string, string>(Bind));
+                    new[]
+                    {
+                        SourceDir,
+                        OutputFile,
+                        PackageId,
+                        PackageVersion,
+                        VersionFile,
+                        MsBuildVersionFile,
+                        PackageDirectory
+                    },
+                    handler: CommandHandler.Create<string, string, string, string, string, string, string>(
+                        BindAndValidate));
             }
 
-            async Task<int> Bind(string? sourceDirectory,
+            Task<int> BindAndValidate(string? sourceDirectory,
                 string? outputFile,
                 string? packageId,
                 string? packageVersion,
@@ -150,19 +168,19 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                 if (string.IsNullOrWhiteSpace(sourceDirectory))
                 {
                     logger.Error("Missing expected --{Arg} argument", SourceDir.Aliases.FirstOrDefault());
-                    return 1;
+                    return Task.FromResult(result: 1);
                 }
 
                 if (string.IsNullOrWhiteSpace(outputFile))
                 {
                     logger.Error("Missing expected --{Arg} argument", OutputFile.Aliases.FirstOrDefault());
-                    return 2;
+                    return Task.FromResult(result: 2);
                 }
 
                 if (string.IsNullOrWhiteSpace(packageId))
                 {
                     logger.Error("Missing expected --{Arg} argument", PackageId.Aliases.FirstOrDefault());
-                    return 3;
+                    return Task.FromResult(result: 3);
                 }
 
                 if (string.IsNullOrWhiteSpace(packageVersion) &&
@@ -170,15 +188,22 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                     string.IsNullOrWhiteSpace(msBuildVersionFile))
                 {
                     logger.Error("Missing expected --{Arg} argument", PackageVersion.Aliases.FirstOrDefault());
-                    return 4;
+                    return Task.FromResult(result: 4);
                 }
 
+                return Bind(sourceDirectory, outputFile, packageId, packageVersion, versionFile, msBuildVersionFile,
+                    packageDirectory);
+            }
+
+            async Task<int> Bind(string sourceDirectory,
+                string outputFile,
+                string packageId,
+                string? packageVersion,
+                string? versionFile,
+                string? msBuildVersionFile,
+                string? packageDirectory)
+            {
                 var version = GetVersion(packageVersion, versionFile, msBuildVersionFile, fileSystem, logger);
-
-                if (version is null)
-                {
-                    throw new InvalidOperationException("Could not get version");
-                }
 
                 var packageDefinition = new PackageDefinition(
                     new PackageId(packageId),
@@ -202,8 +227,9 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                     string packageFileName = $"{packageId}.{version.ToNormalizedString()}.nupkg";
                     var packageFilePath = packageDirectory.NormalizePath() / packageFileName;
 
-                    int packageExitCode = await NuGetPacker.PackNuSpec(outputFileEntry, packageFilePath, logger,
-                        cancellationToken);
+                    int packageExitCode = await NuGetPacker.PackNuSpec(
+                        outputFileEntry, packageFilePath, logger,
+                        cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
 
                     if (packageExitCode != 0)
                     {
