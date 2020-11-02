@@ -69,6 +69,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Application
         {
             var parser = new CommandLineBuilder()
                 .AddCommand(NuSpecCommandDefinition.Tool(_logger, _fileSystem, _cancellationTokenSource.Token))
+                .AddCommand(NuSpecCommandDefinition.CreatePackage(_logger, _fileSystem, _cancellationTokenSource.Token))
                 .AddCommand(PackCommandDefinition.Tool(_logger, _fileSystem, _cancellationTokenSource.Token))
                 .UseVersionOption()
                 .UseHelp().UseParseDirective().UseDebugDirective().UseSuggestDirective().RegisterWithDotnetSuggest()

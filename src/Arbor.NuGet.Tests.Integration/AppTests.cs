@@ -179,6 +179,139 @@ namespace Arbor.NuGet.Tests.Integration
         }
 
         [Fact]
+        public async Task WhenCreatingAPackageDirectlyThenExitCodeShouldBe0()
+        {
+            using var cts = CreateCancellation();
+
+            using IFileSystem fileSystem = new PhysicalFileSystem();
+            await using var sourceDirectory = TempDirectory.Create(fileSystem);
+
+            await fileSystem.WriteAllTextAsync(
+                UPath.Combine(sourceDirectory.Directory.FullName, "test.txt"),
+                "Hello world",
+                Encoding.UTF8,
+                cts.Token);
+
+            await using var targetDirectory = TempDirectory.Create(fileSystem);
+            using var logger = CreateLogger();
+
+            await using var packageDirectory = TempDirectory.Create(fileSystem);
+
+            string[] args =
+            {
+                "package",
+                "create",
+                "--source-directory",
+                $"{sourceDirectory.Directory.FullName}",
+                "--package-id",
+                "Arbor.Sample",
+                "--package-version",
+                "1.2.3",
+                "--package-directory",
+                $"{packageDirectory.Directory.FullName}"
+            };
+
+            using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
+            int exitCode = await app.ExecuteAsync();
+
+            Assert.Equal(expected: 0, exitCode);
+
+            Assert.True(packageDirectory.Directory.Exists);
+            var packagePath = packageDirectory.Directory.Path / "Arbor.Sample.1.2.3.nupkg";
+
+            Assert.True(fileSystem.FileExists(packagePath), $"File.Exists(packagePath) {{'{packagePath}'}}");
+            await using var packageStream = fileSystem.OpenFile(packagePath, FileMode.Open, FileAccess.Read);
+            string[] files;
+
+            using (var reader = new PackageArchiveReader(packageStream))
+            {
+
+                files = reader.GetFiles().ToArray();
+            }
+
+            string[] filteredFiles = files
+                .Where(file => !file.StartsWith("[")
+                               && !file.StartsWith("_")
+                               && !file.StartsWith("package/"))
+                .ToArray();
+
+            logger.Information("Files in package: @{Files}", filteredFiles);
+
+            Assert.Equal(expected: 4, filteredFiles.Length);
+            Assert.Contains("Content/test.txt", filteredFiles);
+            Assert.Contains("contentFiles.json.sha512", filteredFiles);
+            Assert.Contains("contentFiles.json", filteredFiles);
+            Assert.Contains("Arbor.Sample.nuspec", filteredFiles);
+        }
+
+        [Fact]
+        public async Task WhenCreatingAPackageDirectlyWithPreReleasePrefixAndVersionThenExitCodeShouldBe0()
+        {
+            using var cts = CreateCancellation();
+
+            using IFileSystem fileSystem = new PhysicalFileSystem();
+            await using var sourceDirectory = TempDirectory.Create(fileSystem);
+
+            await fileSystem.WriteAllTextAsync(
+                UPath.Combine(sourceDirectory.Directory.FullName, "test.txt"),
+                "Hello world",
+                Encoding.UTF8,
+                cts.Token);
+
+            await using var targetDirectory = TempDirectory.Create(fileSystem);
+            using var logger = CreateLogger();
+
+            await using var packageDirectory = TempDirectory.Create(fileSystem);
+
+            string[] args =
+            {
+                "package",
+                "create",
+                "--source-directory",
+                $"{sourceDirectory.Directory.FullName}",
+                "--package-id",
+                "Arbor.Sample",
+                "--package-version",
+                "1.2.3",
+                "--package-directory",
+                $"{packageDirectory.Directory.FullName}",
+                "--pre-release-version",
+                "-beta.4.5.6+hash-12345"
+            };
+
+            using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
+            int exitCode = await app.ExecuteAsync();
+
+            Assert.Equal(expected: 0, exitCode);
+
+            Assert.True(packageDirectory.Directory.Exists);
+            var packagePath = packageDirectory.Directory.Path / "Arbor.Sample.1.2.3-beta.4.5.6.nupkg";
+
+            Assert.True(fileSystem.FileExists(packagePath), $"File.Exists(packagePath) {{'{packagePath}'}}");
+            await using var packageStream = fileSystem.OpenFile(packagePath, FileMode.Open, FileAccess.Read);
+            string[] files;
+
+            using (var reader = new PackageArchiveReader(packageStream))
+            {
+                files = reader.GetFiles().ToArray();
+            }
+
+            string[] filteredFiles = files
+                .Where(file => !file.StartsWith("[")
+                               && !file.StartsWith("_")
+                               && !file.StartsWith("package/"))
+                .ToArray();
+
+            logger.Information("Files in package: @{Files}", filteredFiles);
+
+            Assert.Equal(expected: 4, filteredFiles.Length);
+            Assert.Contains("Content/test.txt", filteredFiles);
+            Assert.Contains("contentFiles.json.sha512", filteredFiles);
+            Assert.Contains("contentFiles.json", filteredFiles);
+            Assert.Contains("Arbor.Sample.nuspec", filteredFiles);
+        }
+
+        [Fact]
         public async Task WhenCreatingNuSpecWithVersionFileThenVersionShouldBeCorrect()
         {
             int exitCode;
