@@ -71,6 +71,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Application
                 .AddCommand(NuSpecCommandDefinition.Tool(_logger, _fileSystem, _cancellationTokenSource.Token))
                 .AddCommand(NuSpecCommandDefinition.CreatePackage(_logger, _fileSystem, _cancellationTokenSource.Token))
                 .AddCommand(PackCommandDefinition.Tool(_logger, _fileSystem, _cancellationTokenSource.Token))
+                .AddCommand(PackageMetadataCommandDefinition.Tool(_logger, _fileSystem, _cancellationTokenSource.Token))
                 .UseVersionOption()
                 .UseHelp().UseParseDirective().UseDebugDirective().UseSuggestDirective().RegisterWithDotnetSuggest()
                 .UseParseErrorReporting().UseExceptionHandler().Build();

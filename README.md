@@ -19,6 +19,8 @@
 		package create --source-directory=C:\Repository\Output\ --package-id=test --version-file=C:\Repository\version.json --package-directory C:\PackageOutput --pre-release-version=preview.3.4.5
 
 		pack nuspec --nuspec-file=C:\Repository\test.nuspec --package-directory C:\PackageOutput
+
+		package-metadata version --package-file=C:\Output\test.nupkg // prints the package's version to standard out
  
 ## Version JSON file example
 

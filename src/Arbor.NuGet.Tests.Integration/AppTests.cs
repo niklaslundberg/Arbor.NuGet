@@ -9,6 +9,7 @@ using Arbor.NuGet.NuSpec.GlobalTool.Application;
 using NuGet.Packaging;
 using Serilog;
 using Serilog.Core;
+using Serilog.Parsing;
 using Xunit;
 using Xunit.Abstractions;
 using Zio;
@@ -288,27 +289,53 @@ namespace Arbor.NuGet.Tests.Integration
             var packagePath = packageDirectory.Directory.Path / "Arbor.Sample.1.2.3-beta.4.5.6.nupkg";
 
             Assert.True(fileSystem.FileExists(packagePath), $"File.Exists(packagePath) {{'{packagePath}'}}");
-            await using var packageStream = fileSystem.OpenFile(packagePath, FileMode.Open, FileAccess.Read);
-            string[] files;
 
-            using (var reader = new PackageArchiveReader(packageStream))
+            await using (var packageStream = fileSystem.OpenFile(packagePath, FileMode.Open, FileAccess.Read))
             {
-                files = reader.GetFiles().ToArray();
+                string[] files;
+
+                using (var reader = new PackageArchiveReader(packageStream))
+                {
+                    files = reader.GetFiles().ToArray();
+                }
+
+                string[] filteredFiles = files
+                    .Where(file => !file.StartsWith("[")
+                                   && !file.StartsWith("_")
+                                   && !file.StartsWith("package/"))
+                    .ToArray();
+
+                logger.Information("Files in package: @{Files}", filteredFiles);
+
+                Assert.Equal(expected: 4, filteredFiles.Length);
+                Assert.Contains("Content/test.txt", filteredFiles);
+                Assert.Contains("contentFiles.json.sha512", filteredFiles);
+                Assert.Contains("contentFiles.json", filteredFiles);
+                Assert.Contains("Arbor.Sample.nuspec", filteredFiles);
             }
 
-            string[] filteredFiles = files
-                .Where(file => !file.StartsWith("[")
-                               && !file.StartsWith("_")
-                               && !file.StartsWith("package/"))
-                .ToArray();
+            string[] versionArgs =
+            {
+                "package-metadata",
+                "version",
+                "--package-file",
+                packagePath.FullName
+            };
 
-            logger.Information("Files in package: @{Files}", filteredFiles);
+            var logEventSink = new ActionSink("{Message:l}");
 
-            Assert.Equal(expected: 4, filteredFiles.Length);
-            Assert.Contains("Content/test.txt", filteredFiles);
-            Assert.Contains("contentFiles.json.sha512", filteredFiles);
-            Assert.Contains("contentFiles.json", filteredFiles);
-            Assert.Contains("Arbor.Sample.nuspec", filteredFiles);
+            var actionLogger = new LoggerConfiguration()
+                .WriteTo.Sink(logEventSink)
+                .WriteTo.Console()
+                .CreateLogger();
+
+            using var versionApp = new App(versionArgs, actionLogger, fileSystem, cts, leaveFileSystemOpen: true);
+            int versionExitCode = await versionApp.ExecuteAsync();
+
+            Assert.Single(logEventSink.LogEvents);
+            Assert.Equal("1.2.3-beta.4.5.6", logEventSink.LogEvents.Single());
+
+            Assert.Equal(expected: 0, versionExitCode);
         }
 
         [Fact]
