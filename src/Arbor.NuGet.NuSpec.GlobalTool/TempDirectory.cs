@@ -62,7 +62,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool
 
         public static TempDirectory Create(IFileSystem fileSystem, string? prefix = null)
         {
-            var directoryPath = UPath.Combine(Path.GetTempPath().NormalizePath(), prefix + "_" + Guid.NewGuid());
+            var directoryPath = UPath.Combine(Path.GetTempPath().ParseAsPath(), prefix + "_" + Guid.NewGuid());
 
             if (fileSystem.DirectoryExists(directoryPath))
             {

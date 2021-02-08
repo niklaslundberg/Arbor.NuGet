@@ -16,76 +16,44 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
     internal static class NuSpecCommandDefinition
     {
         private static readonly Option SourceDirectory =
-            new Option(
+            new Option<string?>(
                 "--source-directory",
-                Strings.SourceDirectoryDescription,
-                new Argument<string>
-                {
-                    Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
-                });
+                Strings.SourceDirectoryDescription);
 
         private static readonly Option OutputFile =
-            new Option(
+            new Option<string?>(
                 "--output-file",
-                Strings.OutputFileDescription,
-                new Argument<string>
-                {
-                    Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
-                });
+                Strings.OutputFileDescription);
 
         private static readonly Option PackageId =
-            new Option(
+            new Option<string?>(
                 "--package-id",
-                Strings.PackageIdDescription,
-                new Argument<string>
-                {
-                    Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
-                });
+                Strings.PackageIdDescription);
 
         private static readonly Option PackageVersion =
-            new Option(
+            new Option<string?>(
                 "--package-version",
-                Strings.PackageVersionDescription,
-                new Argument<string>
-                {
-                    Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
-                });
+                Strings.PackageVersionDescription);
 
         private static readonly Option VersionFile =
-            new Option(
+            new Option<string?>(
                 "--version-file",
-                Strings.VersionFile,
-                new Argument<string>
-                {
-                    Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
-                });
+                Strings.VersionFile);
 
         private static readonly Option MsBuildVersionFile =
-            new Option(
+            new Option<string?>(
                 "--msbuild-version-file",
-                Strings.MsBuildVersionFile,
-                new Argument<string>
-                {
-                    Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
-                });
+                Strings.MsBuildVersionFile);
 
         private static readonly Option PackageDirectory =
-            new Option(
+            new Option<string?>(
                 "--package-directory",
-                Strings.PackageOutputDirectory,
-                new Argument<string>
-                {
-                    Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
-                });
+                Strings.PackageOutputDirectory);
 
         private static readonly Option PreReleaseVersion =
-            new Option(
+            new Option<string?>(
                 "--pre-release-version",
-                Strings.PackageOutputDirectory,
-                new Argument<string>
-                {
-                    Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
-                });
+                Strings.PackageOutputDirectory);
 
         private static SemanticVersion GetVersion(CommandOptions options,
             IFileSystem fileSystem,
@@ -107,9 +75,9 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
             else if (!string.IsNullOrWhiteSpace(options.VersionFile))
             {
                 var versionFromFile =
-                    JsonFileVersionHelper.GetVersionFromJsonFile(options.VersionFile!.NormalizePath(), fileSystem, logger);
+                    JsonFileVersionHelper.GetVersionFromJsonFile(options.VersionFile!.ParseAsPath(), fileSystem, logger);
 
-                if (versionFromFile is {})
+                if (versionFromFile is { })
                 {
                     version = versionFromFile;
                 }
@@ -121,10 +89,10 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
             else
             {
                 var versionFromFile =
-                    JsonFileVersionHelper.GetVersionFromMsBuildFile(options.MsBuildVersionFile!.NormalizePath(), fileSystem,
+                    JsonFileVersionHelper.GetVersionFromMsBuildFile(options.MsBuildVersionFile!.ParseAsPath(), fileSystem,
                         logger);
 
-                if (versionFromFile is {})
+                if (versionFromFile is { })
                 {
                     version = versionFromFile;
                 }
@@ -166,24 +134,24 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
 
             Command NuSpec()
             {
-                return new Command(
+                var command = new Command(
                     "create",
-                    Strings.CreateDescription,
-                    new[]
-                    {
-                        SourceDirectory,
-                        OutputFile,
-                        PackageId,
-                        PackageVersion,
-                        VersionFile,
-                        MsBuildVersionFile,
-                        PackageDirectory,
-                        PreReleaseVersion
-                    },
-                    handler: CommandHandler.Create<CommandOptions>(options =>
-                        BindAndValidate(options, logger, fileSystem, cancellationToken)));
-            }
+                    Strings.CreateDescription);
 
+                command.AddOption(SourceDirectory);
+                command.AddOption(OutputFile);
+                command.AddOption(PackageId);
+                command.AddOption(PackageVersion);
+                command.AddOption(VersionFile);
+                command.AddOption(MsBuildVersionFile);
+                command.AddOption(PackageDirectory);
+                command.AddOption(PreReleaseVersion);
+
+                command.Handler = CommandHandler.Create<CommandOptions>(options =>
+                    BindAndValidate(options, logger, fileSystem, cancellationToken));
+
+                return command;
+            }
 
             tool.AddCommand(NuSpec());
 
@@ -196,21 +164,22 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
 
             Command NuSpec()
             {
-                return new Command(
+                var command = new Command(
                     "create",
-                    Strings.CreateDescription,
-                    new[]
-                    {
-                        SourceDirectory,
-                        PackageId,
-                        PackageVersion,
-                        VersionFile,
-                        MsBuildVersionFile,
-                        PackageDirectory,
-                        PreReleaseVersion
-                    },
-                    handler: CommandHandler.Create<CommandOptions>(options =>
-                        BindAndValidate(options, logger, fileSystem, cancellationToken)));
+                    Strings.CreateDescription);
+
+                command.AddOption(SourceDirectory);
+                command.AddOption(PackageId);
+                command.AddOption(PackageVersion);
+                command.AddOption(VersionFile);
+                command.AddOption(MsBuildVersionFile);
+                command.AddOption(PackageDirectory);
+                command.AddOption(PreReleaseVersion);
+
+                command.Handler = CommandHandler.Create<CommandOptions>(options =>
+                    BindAndValidate(options, logger, fileSystem, cancellationToken));
+
+                return command;
             }
 
             tool.AddCommand(NuSpec());
@@ -232,13 +201,13 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
 
             await using var tempDirectory = TempDirectory.Create(fileSystem, "arbognuget_nuspec");
 
-            UPath nuspecPath = options.OutputFile?.NormalizePath() ??
+            UPath nuspecPath = options.OutputFile?.ParseAsPath() ??
                                tempDirectory.Directory.Path / $"{options.PackageId}_{Guid.NewGuid()}.nuspec";
 
             int exitCode = await NuSpecCreator.CreateSpecificationAsync(
                 packageDefinition,
                 logger,
-                new DirectoryEntry(fileSystem, options.SourceDirectory!.NormalizePath()),
+                new DirectoryEntry(fileSystem, options.SourceDirectory!.ParseAsPath()),
                 nuspecPath,
                 cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
 
@@ -251,7 +220,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
             {
                 var outputFileEntry = fileSystem.GetFileEntry(nuspecPath);
                 string packageFileName = $"{options.PackageId}.{version.ToNormalizedString()}.nupkg";
-                var packageFilePath = options.PackageDirectory.NormalizePath() / packageFileName;
+                var packageFilePath = options.PackageDirectory.ParseAsPath() / packageFileName;
 
                 int packageExitCode = await NuGetPacker.PackNuSpec(
                     outputFileEntry, packageFilePath, logger,

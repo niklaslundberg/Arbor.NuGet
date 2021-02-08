@@ -15,22 +15,14 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
     internal static class PackCommandDefinition
     {
         private static readonly Option NuSpecFile =
-            new Option(
+            new Option<string?>(
                 "--nuspec-file",
-                "NuSpec file",
-                new Argument<string>
-                {
-                    Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
-                });
+                "NuSpec file");
 
         private static readonly Option PackageDirectory =
-            new Option(
+            new Option<string?>(
                 "--package-directory",
-                Strings.PackageOutputDirectory,
-                new Argument<string>
-                {
-                    Arity = new ArgumentArity(minimumNumberOfArguments: 1, maximumNumberOfArguments: 1)
-                });
+                Strings.PackageOutputDirectory);
 
 
         public static Command Tool(ILogger logger, IFileSystem fileSystem, CancellationToken cancellationToken)
@@ -39,11 +31,14 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
 
             Command NuSpec()
             {
-                return new Command(
+                var command = new Command(
                     "nuspec",
-                    Strings.PackNuSpec,
-                    new[] {NuSpecFile, PackageDirectory},
-                    handler: CommandHandler.Create<string, string>(Bind));
+                    Strings.PackNuSpec);
+                command.AddOption(NuSpecFile);
+                command.AddOption(PackageDirectory);
+
+                command.Handler = CommandHandler.Create<string, string>(Bind);
+                return command;
             }
 
             Task<int> Bind(string? nuSpecFile,
@@ -67,7 +62,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
             async Task<int> BindInternal(string nuSpecFile,
                 string packageDirectory)
             {
-                var nuSpecFileEntry = fileSystem.GetFileEntry(nuSpecFile.NormalizePath());
+                var nuSpecFileEntry = fileSystem.GetFileEntry(nuSpecFile.ParseAsPath());
 
                 string normalizedVersion;
                 string packageId;
@@ -81,7 +76,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                 }
 
                 string packageFileName = $"{packageId}.{normalizedVersion}.nupkg";
-                var packageFilePath = packageDirectory.NormalizePath() / packageFileName;
+                var packageFilePath = packageDirectory.ParseAsPath() / packageFileName;
 
                 return await NuGetPacker.PackNuSpec(
                     nuSpecFileEntry,

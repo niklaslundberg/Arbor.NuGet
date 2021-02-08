@@ -42,7 +42,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Checksum
             string json = JsonConvert.SerializeObject(new {files}, Formatting.Indented);
 
             var tempDirectory = new DirectoryEntry(baseDirectory.FileSystem,
-                    UPath.Combine(Path.GetTempPath().NormalizePath(), Guid.NewGuid().ToString()))
+                    UPath.Combine(Path.GetTempPath().ParseAsPath(), Guid.NewGuid().ToString()))
                 .EnsureExists();
 
             var contentFilesFile = new FileEntry(baseDirectory.FileSystem,

@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
+using Arbor.FS;
 using NuGet.Packaging;
 using Serilog;
 using Zio;

@@ -13,13 +13,9 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
     internal static class PackageMetadataCommandDefinition
     {
         private static readonly Option PackageFile =
-            new Option(
+            new Option<string?>(
                 "--package-file",
-                Strings.PackageFile,
-                new Argument<string>
-                {
-                    Arity = new ArgumentArity(minimumNumberOfArguments: 0, maximumNumberOfArguments: 1)
-                });
+                Strings.PackageFile);
 
         public static Command Tool(ILogger logger, IFileSystem fileSystem, CancellationToken cancellationToken)
         {
@@ -27,12 +23,16 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
 
             Command Version()
             {
-                return new Command(
+                var command = new Command(
                     "version",
-                    Strings.MetadataVersionDescription,
-                    new[] {PackageFile},
-                    handler: CommandHandler.Create<string>(packageFile =>
-                        BindAndValidate(packageFile, logger, fileSystem, cancellationToken)));
+                    Strings.MetadataVersionDescription);
+
+                command.AddOption(PackageFile);
+
+                command.Handler = CommandHandler.Create<string>(packageFile =>
+                    BindAndValidate(packageFile, logger, fileSystem, cancellationToken));
+
+                return command;
             }
 
             tool.AddCommand(Version());
@@ -51,7 +51,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
             }
 
             await using var packageStream =
-                fileSystem.OpenFile(packageFile.NormalizePath(), FileMode.Open, FileAccess.Read);
+                fileSystem.OpenFile(packageFile.ParseAsPath(), FileMode.Open, FileAccess.Read);
 
             using var reader = new PackageArchiveReader(packageStream);
 

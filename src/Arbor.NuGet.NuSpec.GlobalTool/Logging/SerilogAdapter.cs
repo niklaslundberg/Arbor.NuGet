@@ -1,5 +1,6 @@
 ﻿using System;
 using System.CommandLine;
+using System.CommandLine.IO;
 using Serilog;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Logging
