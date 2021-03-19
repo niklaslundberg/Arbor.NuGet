@@ -37,7 +37,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
             await using var nuspecStream = nuSpecFile.Open(FileMode.Open, FileAccess.Read);
 
-            string? baseDirectory = nuSpecFile.FileSystem.ConvertPathToInternal(nuSpecFile.Directory.Path);
+            string baseDirectory = nuSpecFile.FileSystem.ConvertPathToInternal(nuSpecFile.Directory.Path);
 
             var builder = new PackageBuilder(nuspecStream, baseDirectory);
 

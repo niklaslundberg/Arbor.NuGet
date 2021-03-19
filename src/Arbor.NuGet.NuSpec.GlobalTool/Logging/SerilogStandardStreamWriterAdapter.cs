@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.CommandLine.IO;
 using System.Linq;
 using Serilog;
@@ -9,7 +8,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Logging
 {
     internal sealed class SerilogStandardStreamWriterAdapter : IStandardStreamWriter, IDisposable
     {
-        private readonly List<string> _buffer = new List<string>();
+        private readonly List<string> _buffer = new();
         private readonly ILogger _logger;
 
         public SerilogStandardStreamWriterAdapter(ILogger logger) => _logger = logger;

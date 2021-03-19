@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Arbor.FS;
 using Arbor.NuGet.NuSpec.GlobalTool.Checksum;
-using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
 using Arbor.Processing;
 using Serilog;
 using Zio;
@@ -51,14 +50,15 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
                 return ExitCode.Failure;
             }
 
-            if (string.IsNullOrWhiteSpace(packageConfiguration.OutputFile.GetExtensionWithDot()))
+            string? extensionWithDot = packageConfiguration.OutputFile.GetExtensionWithDot();
+
+            if (string.IsNullOrWhiteSpace(extensionWithDot))
             {
                 _logger.Error("The output file is missing extension");
                 return ExitCode.Failure;
             }
 
-            if (!packageConfiguration.OutputFile.GetExtensionWithDot()
-                .Equals(NuSpecFileExtension, StringComparison.OrdinalIgnoreCase))
+            if (!extensionWithDot.Equals(NuSpecFileExtension, StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Error("The output file must have the extension {Extension}", NuSpecFileExtension);
                 return ExitCode.Failure;
