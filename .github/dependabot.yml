@@ -1,0 +1,39 @@
+version: 2
+updates:
+- package-ecosystem: nuget
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: SonarAnalyzer.CSharp
+    versions:
+    - 8.17.0.26580
+    - 8.19.0.28253
+    - 8.20.0.28934
+  - dependency-name: Microsoft.VisualStudio.Threading.Analyzers
+    versions:
+    - 16.9.54
+    - 16.9.60
+  - dependency-name: NuGet.Packaging
+    versions:
+    - 5.9.0
+  - dependency-name: NuGet.Versioning
+    versions:
+    - 5.9.0
+  - dependency-name: Microsoft.CodeAnalysis.Compilers
+    versions:
+    - 3.9.0
+  - dependency-name: Microsoft.CodeAnalysis.CSharp
+    versions:
+    - 3.9.0
+  - dependency-name: Microsoft.NET.Test.Sdk
+    versions:
+    - 16.9.1
+  - dependency-name: Arbor.FS
+    versions:
+    - 0.2.0
+  - dependency-name: Arbor.KVConfiguration.JsonConfiguration
+    versions:
+    - 1.1.4
