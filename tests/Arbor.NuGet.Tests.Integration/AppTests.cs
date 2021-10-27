@@ -227,7 +227,6 @@ namespace Arbor.NuGet.Tests.Integration
 
             using (var reader = new PackageArchiveReader(packageStream))
             {
-
                 files = reader.GetFiles().ToArray();
             }
 

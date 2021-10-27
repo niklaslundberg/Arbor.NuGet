@@ -3,6 +3,7 @@
     internal static class Strings
     {
         public const string PackageMetadata = "Package metadata";
+
         public const string PackageFile = "Package file";
 
         public const string PackageOutputDirectory = "NuGet package output directory";

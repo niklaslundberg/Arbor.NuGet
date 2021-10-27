@@ -21,12 +21,11 @@ namespace Arbor.NuGet.Tests.Integration
         public PackTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
 
         private static CancellationTokenSource CreateCancellation() =>
-            new CancellationTokenSource(TimeSpan.FromMinutes(value: 1));
+            new(TimeSpan.FromMinutes(value: 1));
 
         private Logger CreateLogger() =>
             new LoggerConfiguration().WriteTo.TestOutput(_testOutputHelper)
                 .CreateLogger();
-
 
         [Fact]
         public async Task WhenCreatingNuGetPackageWithValidArgsThenExitCodeShouldBe0()
@@ -68,10 +67,10 @@ namespace Arbor.NuGet.Tests.Integration
                     "1.2.3"
                 };
 
-                using var app = new App(args, logger, fileSystem, cts, leaveFileSystemOpen: true);
+                using var app = new App(args, logger, fileSystem, cts, true);
                 exitCode = await app.ExecuteAsync();
 
-                Assert.Equal(expected: 0, exitCode);
+                Assert.Equal(0, exitCode);
 
                 string[] packArgs =
                 {
@@ -83,12 +82,12 @@ namespace Arbor.NuGet.Tests.Integration
                 using var packApp = new App(packArgs, logger, fileSystem, cts, leaveFileSystemOpen: true);
                 exitCode = await packApp.ExecuteAsync();
 
-                Assert.Equal(expected: 0, exitCode);
+                Assert.Equal(0, exitCode);
 
                 Assert.True(fileSystem.FileExists(packageFile));
             }
 
-            Assert.Equal(expected: 0, exitCode);
+            Assert.Equal(0, exitCode);
         }
     }
 }
