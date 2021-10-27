@@ -57,9 +57,9 @@
       },
       "Microsoft.VisualStudio.Threading.Analyzers": {
         "type": "Direct",
-        "requested": "[16.10.56, )",
-        "resolved": "16.10.56",
-        "contentHash": "uTvu9fbmHTtRFY5xUgG45waU+ARad0JxyG/2btOC9Su6RTo3PrGVXKU2vHDtVELqlJsnKImhMaPH3YR0XCVwDg=="
+        "requested": "[17.0.63, )",
+        "resolved": "17.0.63",
+        "contentHash": "awAw0YlX/0fzgQeL75S1OrTPLb8qOemFpAk6Vqh5DQ9p45mWGFFFiZzUB1UWltKk+ec+QmshYrm18iBGE1lvSQ=="
       },
       "Newtonsoft.Json": {
         "type": "Direct",
@@ -103,9 +103,9 @@
       },
       "SonarAnalyzer.CSharp": {
         "type": "Direct",
-        "requested": "[8.27.0.35380, )",
-        "resolved": "8.27.0.35380",
-        "contentHash": "ua8Gf3SvaKb/pAtU3aMPA+uu29SVBFr0WwipPpFhfA31SOaW3dcngj0J1kh8KfTa65QEaNmU/IbMd5MOxWaoig=="
+        "requested": "[8.30.0.37606, )",
+        "resolved": "8.30.0.37606",
+        "contentHash": "tJSoL+yuVHNTDRa8yjuv48y6b0lYLh/o1/8LZM/1lzj0Q3UuZXAburFkk+HU5RnNW/LWX2/CnZte2RAQcSG6bQ=="
       },
       "System.Collections.Immutable": {
         "type": "Direct",
@@ -334,9 +334,9 @@
       },
       "Microsoft.VisualStudio.Threading.Analyzers": {
         "type": "Direct",
-        "requested": "[16.10.56, )",
-        "resolved": "16.10.56",
-        "contentHash": "uTvu9fbmHTtRFY5xUgG45waU+ARad0JxyG/2btOC9Su6RTo3PrGVXKU2vHDtVELqlJsnKImhMaPH3YR0XCVwDg=="
+        "requested": "[17.0.63, )",
+        "resolved": "17.0.63",
+        "contentHash": "awAw0YlX/0fzgQeL75S1OrTPLb8qOemFpAk6Vqh5DQ9p45mWGFFFiZzUB1UWltKk+ec+QmshYrm18iBGE1lvSQ=="
       },
       "Newtonsoft.Json": {
         "type": "Direct",
@@ -380,9 +380,9 @@
       },
       "SonarAnalyzer.CSharp": {
         "type": "Direct",
-        "requested": "[8.27.0.35380, )",
-        "resolved": "8.27.0.35380",
-        "contentHash": "ua8Gf3SvaKb/pAtU3aMPA+uu29SVBFr0WwipPpFhfA31SOaW3dcngj0J1kh8KfTa65QEaNmU/IbMd5MOxWaoig=="
+        "requested": "[8.30.0.37606, )",
+        "resolved": "8.30.0.37606",
+        "contentHash": "tJSoL+yuVHNTDRa8yjuv48y6b0lYLh/o1/8LZM/1lzj0Q3UuZXAburFkk+HU5RnNW/LWX2/CnZte2RAQcSG6bQ=="
       },
       "System.Collections.Immutable": {
         "type": "Direct",
@@ -608,9 +608,9 @@
       },
       "Microsoft.VisualStudio.Threading.Analyzers": {
         "type": "Direct",
-        "requested": "[16.10.56, )",
-        "resolved": "16.10.56",
-        "contentHash": "uTvu9fbmHTtRFY5xUgG45waU+ARad0JxyG/2btOC9Su6RTo3PrGVXKU2vHDtVELqlJsnKImhMaPH3YR0XCVwDg=="
+        "requested": "[17.0.63, )",
+        "resolved": "17.0.63",
+        "contentHash": "awAw0YlX/0fzgQeL75S1OrTPLb8qOemFpAk6Vqh5DQ9p45mWGFFFiZzUB1UWltKk+ec+QmshYrm18iBGE1lvSQ=="
       },
       "Newtonsoft.Json": {
         "type": "Direct",
@@ -654,9 +654,9 @@
       },
       "SonarAnalyzer.CSharp": {
         "type": "Direct",
-        "requested": "[8.27.0.35380, )",
-        "resolved": "8.27.0.35380",
-        "contentHash": "ua8Gf3SvaKb/pAtU3aMPA+uu29SVBFr0WwipPpFhfA31SOaW3dcngj0J1kh8KfTa65QEaNmU/IbMd5MOxWaoig=="
+        "requested": "[8.30.0.37606, )",
+        "resolved": "8.30.0.37606",
+        "contentHash": "tJSoL+yuVHNTDRa8yjuv48y6b0lYLh/o1/8LZM/1lzj0Q3UuZXAburFkk+HU5RnNW/LWX2/CnZte2RAQcSG6bQ=="
       },
       "System.Collections.Immutable": {
         "type": "Direct",
