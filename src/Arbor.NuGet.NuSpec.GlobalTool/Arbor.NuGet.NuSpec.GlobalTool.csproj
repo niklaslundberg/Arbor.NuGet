@@ -18,7 +18,7 @@
     <PackageReference Include="Arbor.KVConfiguration.JsonConfiguration" Version="1.2.0" />
     <PackageReference Include="Arbor.Processing" Version="0.6.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2021.2.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="3.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="4.0.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.0.63">
       <PrivateAssets>all</PrivateAssets>
