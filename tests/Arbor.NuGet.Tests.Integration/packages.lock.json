@@ -62,7 +62,7 @@
       "Arbor.KVConfiguration.JsonConfiguration": {
         "type": "Transitive",
         "resolved": "2.1.0",
-        "contentHash": "MfBUpm9sRMJB4KESEprsV5eX0Bi1q6zyBNmd580+mcb8VTGeR9mqplLQcxQ5Oy3Pe9Cjkycrd2FbmRo99n0tNg==",
+        "contentHash": "ZLqxRrU8QBi1EXweEA6w7qstsxWtxf0zy+qjVafGcC8+A/I5EQf5PpiizZB6Wkyvow+x1m/iZuikPS0M8L02cQ==",
         "dependencies": {
           "Arbor.KVConfiguration.Core": "[2.0.0, 3.0.0)",
           "Arbor.KVConfiguration.Schema": "[2.0.0, 3.0.0)",
@@ -1305,7 +1305,7 @@
       "Arbor.KVConfiguration.JsonConfiguration": {
         "type": "Transitive",
         "resolved": "2.1.0",
-        "contentHash": "MfBUpm9sRMJB4KESEprsV5eX0Bi1q6zyBNmd580+mcb8VTGeR9mqplLQcxQ5Oy3Pe9Cjkycrd2FbmRo99n0tNg==",
+        "contentHash": "ZLqxRrU8QBi1EXweEA6w7qstsxWtxf0zy+qjVafGcC8+A/I5EQf5PpiizZB6Wkyvow+x1m/iZuikPS0M8L02cQ==",
         "dependencies": {
           "Arbor.KVConfiguration.Core": "[2.0.0, 3.0.0)",
           "Arbor.KVConfiguration.Schema": "[2.0.0, 3.0.0)",
