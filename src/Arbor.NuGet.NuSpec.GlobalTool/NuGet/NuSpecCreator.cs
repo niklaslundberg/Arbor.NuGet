@@ -12,9 +12,10 @@ using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 {
-    internal class NuSpecCreator
+    internal sealed class NuSpecCreator
     {
         private const string NuSpecFileExtension = ".nuspec";
+        private const string NugetOrgUrl = "https://nuget.org";
 
         private readonly ILogger _logger;
 
@@ -69,11 +70,11 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
             string description = packageId;
             string summary = packageId;
             const string language = "en-US";
-            const string projectUrl = "http://nuget.org";
-            const string iconUrl = "http://nuget.org";
+            const string projectUrl = NugetOrgUrl;
+            const string iconUrl = NugetOrgUrl;
             const string requireLicenseAcceptance = "false";
-            const string licenseUrl = "http://nuget.org";
-            string copyright = "Undefined";
+            const string licenseUrl = NugetOrgUrl;
+            const string copyright = "Undefined";
             string tags = string.Empty;
 
             var fileList = packageDirectory.EnumerateFiles("*", SearchOption.AllDirectories);
