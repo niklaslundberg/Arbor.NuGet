@@ -51,8 +51,8 @@
       },
       "Arbor.KVConfiguration.Core": {
         "type": "Transitive",
-        "resolved": "2.4.0-build.1668196076",
-        "contentHash": "r/xDmbiS2Fxm0LIqXcIZL9hEziwefZQIXMEPgsXZE0Vv1JqmH2ehEXKO3NZJ4fYr2P+yqo0tkTn6B05MAhhEEA==",
+        "resolved": "2.4.0",
+        "contentHash": "XNm32lbZwI3m/kkl0T1H94FYqVNiRJcs3MFV6Ty7Ua2GY50wGrWSHMPRBu1o9bAr/jDYyGbXrOYBe2R7RFGxmQ==",
         "dependencies": {
           "Microsoft.Extensions.Primitives": "[3.0.0, 8.0.0)",
           "System.Collections.Immutable": "[1.5.0, 8.0.0)"
@@ -60,8 +60,8 @@
       },
       "Arbor.KVConfiguration.JsonConfiguration": {
         "type": "Transitive",
-        "resolved": "2.4.0-build.1668196076",
-        "contentHash": "7tdwyNz9xs9qS36jRIXF3mtza/g32XGix0V5HQ8udqHS0yJQTLVPDEyEj4z8OV3BIEasPkXcBtlCJKiACXzXZQ==",
+        "resolved": "2.4.0",
+        "contentHash": "4FB/V3/8u/Ad6eAOXVlqtugxrkT2UfDloTlD2aosL3ehUa1Ez3c4DEWVh8FFV+V9pjYjXFY4rpG2dfaiuHD2cQ==",
         "dependencies": {
           "Arbor.KVConfiguration.Core": "[2.0.0, 3.0.0)",
           "Arbor.KVConfiguration.Schema": "[2.0.0, 3.0.0)",
@@ -1226,8 +1226,8 @@
         "type": "Project",
         "dependencies": {
           "Arbor.FileSystem": "[0.5.0, )",
-          "Arbor.KVConfiguration.Core": "[2.4.0-build.1668196076, )",
-          "Arbor.KVConfiguration.JsonConfiguration": "[2.4.0-build.1668196076, )",
+          "Arbor.KVConfiguration.Core": "[2.4.0, )",
+          "Arbor.KVConfiguration.JsonConfiguration": "[2.4.0, )",
           "Arbor.Processing": "[0.6.0, )",
           "JetBrains.Annotations": "[2022.3.1, )",
           "Microsoft.CodeAnalysis.CSharp": "[4.3.1, )",
@@ -1292,8 +1292,8 @@
       },
       "Arbor.KVConfiguration.Core": {
         "type": "Transitive",
-        "resolved": "2.4.0-build.1668196076",
-        "contentHash": "r/xDmbiS2Fxm0LIqXcIZL9hEziwefZQIXMEPgsXZE0Vv1JqmH2ehEXKO3NZJ4fYr2P+yqo0tkTn6B05MAhhEEA==",
+        "resolved": "2.4.0",
+        "contentHash": "XNm32lbZwI3m/kkl0T1H94FYqVNiRJcs3MFV6Ty7Ua2GY50wGrWSHMPRBu1o9bAr/jDYyGbXrOYBe2R7RFGxmQ==",
         "dependencies": {
           "Microsoft.Extensions.Primitives": "[3.0.0, 8.0.0)",
           "System.Collections.Immutable": "[1.5.0, 8.0.0)"
@@ -1301,8 +1301,8 @@
       },
       "Arbor.KVConfiguration.JsonConfiguration": {
         "type": "Transitive",
-        "resolved": "2.4.0-build.1668196076",
-        "contentHash": "7tdwyNz9xs9qS36jRIXF3mtza/g32XGix0V5HQ8udqHS0yJQTLVPDEyEj4z8OV3BIEasPkXcBtlCJKiACXzXZQ==",
+        "resolved": "2.4.0",
+        "contentHash": "4FB/V3/8u/Ad6eAOXVlqtugxrkT2UfDloTlD2aosL3ehUa1Ez3c4DEWVh8FFV+V9pjYjXFY4rpG2dfaiuHD2cQ==",
         "dependencies": {
           "Arbor.KVConfiguration.Core": "[2.0.0, 3.0.0)",
           "Arbor.KVConfiguration.Schema": "[2.0.0, 3.0.0)",
@@ -2464,8 +2464,8 @@
         "type": "Project",
         "dependencies": {
           "Arbor.FileSystem": "[0.5.0, )",
-          "Arbor.KVConfiguration.Core": "[2.4.0-build.1668196076, )",
-          "Arbor.KVConfiguration.JsonConfiguration": "[2.4.0-build.1668196076, )",
+          "Arbor.KVConfiguration.Core": "[2.4.0, )",
+          "Arbor.KVConfiguration.JsonConfiguration": "[2.4.0, )",
           "Arbor.Processing": "[0.6.0, )",
           "JetBrains.Annotations": "[2022.3.1, )",
           "Microsoft.CodeAnalysis.CSharp": "[4.3.1, )",
