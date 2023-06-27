@@ -85,7 +85,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
 
             var targetDirectory =
                 new FileEntry(packageConfiguration.SourceDirectory.FileSystem, packageConfiguration.OutputFile)
-                    .Directory!;
+                    .Directory;
 
             targetDirectory.EnsureExists();
 

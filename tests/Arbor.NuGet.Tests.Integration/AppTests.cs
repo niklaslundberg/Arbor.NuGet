@@ -24,8 +24,7 @@ namespace Arbor.NuGet.Tests.Integration
 
         public AppTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
 
-        private static CancellationTokenSource CreateCancellation() =>
-            new CancellationTokenSource(TimeSpan.FromMinutes(value: 1));
+        private static CancellationTokenSource CreateCancellation() => new(TimeSpan.FromMinutes(value: 1));
 
         private Logger CreateLogger() =>
             new LoggerConfiguration().WriteTo.TestOutput(_testOutputHelper)
@@ -348,7 +347,7 @@ namespace Arbor.NuGet.Tests.Integration
                 using IFileSystem fileSystem = new PhysicalFileSystem();
                 await using var versionTempDirectory = TempDirectory.Create(fileSystem);
 
-                string jsonVersionFileContent = @"{
+                const string jsonVersionFileContent = @"{
     ""version"": ""1.0"",
     ""keys"": [
       {
@@ -423,7 +422,7 @@ namespace Arbor.NuGet.Tests.Integration
                 using IFileSystem fileSystem = new PhysicalFileSystem();
                 await using var versionTempDirectory = TempDirectory.Create(fileSystem);
 
-                string jsonVersionFileContent = @"<Project>
+                const string jsonVersionFileContent = @"<Project>
  <PropertyGroup>
    <Version>3.2.1</Version>
  </PropertyGroup>

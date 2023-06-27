@@ -59,28 +59,23 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Versioning
 
                 var document = XDocument.Load(stream);
 
-               var project= document.Element(XName.Get("Project"));
+                var project = document.Element(XName.Get("Project")) ?? throw new InvalidOperationException($"Could not find project in file {versionFile.FullName}");
 
-               if (project is null)
-               {
-                   throw new InvalidOperationException($"Could not find project in file {versionFile.FullName}");
-               }
+                var propertyGroups = project.Elements(XName.Get("PropertyGroup"));
 
-               var propertyGroups = project.Elements(XName.Get("PropertyGroup"));
+                string? versionValue = propertyGroups.Elements(XName.Get("Version")).FirstOrDefault()?.Value;
 
-               string? versionValue = propertyGroups.Elements(XName.Get("Version")).FirstOrDefault()?.Value;
+                if (string.IsNullOrWhiteSpace(versionValue))
+                {
+                    throw new InvalidOperationException($"Could not find a version property in file {versionFile.FullName}");
+                }
 
-               if (string.IsNullOrWhiteSpace(versionValue))
-               {
-                   throw new InvalidOperationException($"Could not find a version property in file {versionFile.FullName}");
-               }
+                if (!SemanticVersion.TryParse(versionValue, out var version))
+                {
+                    throw new InvalidOperationException($"Could not parse '{versionValue}' as a valid semantic version");
+                }
 
-               if (!SemanticVersion.TryParse(versionValue, out var version))
-               {
-                   throw new InvalidOperationException($"Could not parse '{versionValue}' as a valid semantic version");
-               }
-
-               return version;
+                return version;
             }
             catch (Exception ex) when (!ex.IsFatal())
             {

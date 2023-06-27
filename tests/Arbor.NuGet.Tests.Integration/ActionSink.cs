@@ -10,7 +10,7 @@ using Serilog.Formatting.Display;
 
 namespace Arbor.NuGet.Tests.Integration
 {
-    public class ActionSink : ILogEventSink, IDisposable
+    public sealed class ActionSink : ILogEventSink, IDisposable
     {
         private readonly List<string> _logEvents;
         private readonly MessageTemplateTextFormatter _formatter;
