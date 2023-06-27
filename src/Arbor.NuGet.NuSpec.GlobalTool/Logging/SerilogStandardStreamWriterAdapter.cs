@@ -31,7 +31,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Logging
         {
             if (_buffer.Any())
             {
-                _logger.Information("{Message}", string.Join(string.Empty, _buffer));
+                _logger.Information("{Message}", string.Concat(_buffer));
             }
 
             _buffer.Clear();

@@ -24,7 +24,6 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
                 "--package-directory",
                 Strings.PackageOutputDirectory);
 
-
         public static Command Tool(ILogger logger, IFileSystem fileSystem, CancellationToken cancellationToken)
         {
             var tool = new Command("pack", Strings.PackNuSpecPackCommand);
