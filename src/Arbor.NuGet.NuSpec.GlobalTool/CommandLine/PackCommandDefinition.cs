@@ -81,7 +81,7 @@ internal static class PackCommandDefinition
                 nuSpecFileEntry,
                 packageFilePath,
                 logger,
-                cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+                cancellationToken);
         }
 
         tool.AddCommand(NuSpec());

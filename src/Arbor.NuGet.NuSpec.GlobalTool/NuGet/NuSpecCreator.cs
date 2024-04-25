@@ -34,7 +34,7 @@ internal sealed class NuSpecCreator
             new NuGetPackageConfiguration(packageDefinition, sourceDirectory, outputFile);
 
         var exitCode = await nuSpecCreator.CreateNuGetPackageAsync(nuGetPackageConfiguration, cancellationToken)
-            .ConfigureAwait(continueOnCapturedContext: false);
+            ;
 
         return exitCode.Code;
     }
@@ -90,7 +90,7 @@ internal sealed class NuSpecCreator
         targetDirectory.EnsureExists();
 
         var contentFilesInfo = await ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory)
-            .ConfigureAwait(continueOnCapturedContext: false);
+            ;
 
         string contentFileListFile =
             $@"<file src=""{contentFilesInfo.ContentFilesFile}"" target=""{contentFilesInfo.ContentFilesFile}"" />";
@@ -98,40 +98,42 @@ internal sealed class NuSpecCreator
         string checksumFile =
             $@"<file src=""{contentFilesInfo.ChecksumFile}"" target=""{contentFilesInfo.ChecksumFile}"" />";
 
-        string nuspecContent = $@"<?xml version=""1.0""?>
-<package>
-    <metadata>
-        <id>{packageId}</id>
-        <version>{normalizedVersion}</version>
-        <title>{packageId}</title>
-        <authors>Authors</authors>
-        <owners>Owners</owners>
-        <description>
-            {description}
-        </description>
-        <releaseNotes>
-        </releaseNotes>
-        <summary>
-            {summary}
-        </summary>
-        <language>{language}</language>
-        <projectUrl>{projectUrl}</projectUrl>
-        <iconUrl>{iconUrl}</iconUrl>
-        <requireLicenseAcceptance>{requireLicenseAcceptance}</requireLicenseAcceptance>
-        <licenseUrl>{licenseUrl}</licenseUrl>
-        <copyright>{copyright}</copyright>
-        <dependencies>
+        string nuspecContent = $"""
+                                <?xml version="1.0"?>
+                                <package>
+                                    <metadata>
+                                        <id>{packageId}</id>
+                                        <version>{normalizedVersion}</version>
+                                        <title>{packageId}</title>
+                                        <authors>Authors</authors>
+                                        <owners>Owners</owners>
+                                        <description>
+                                            {description}
+                                        </description>
+                                        <releaseNotes>
+                                        </releaseNotes>
+                                        <summary>
+                                            {summary}
+                                        </summary>
+                                        <language>{language}</language>
+                                        <projectUrl>{projectUrl}</projectUrl>
+                                        <iconUrl>{iconUrl}</iconUrl>
+                                        <requireLicenseAcceptance>{requireLicenseAcceptance}</requireLicenseAcceptance>
+                                        <licenseUrl>{licenseUrl}</licenseUrl>
+                                        <copyright>{copyright}</copyright>
+                                        <dependencies>
 
-        </dependencies>
-        <references></references>
-        <tags>{tags}</tags>
-    </metadata>
-    <files>
-        {files}
-        {contentFileListFile}
-        {checksumFile}
-    </files>
-</package>";
+                                        </dependencies>
+                                        <references></references>
+                                        <tags>{tags}</tags>
+                                    </metadata>
+                                    <files>
+                                        {files}
+                                        {contentFileListFile}
+                                        {checksumFile}
+                                    </files>
+                                </package>
+                                """;
 
         _logger.Information("{NuSpec}", nuspecContent);
 
@@ -144,7 +146,7 @@ internal sealed class NuSpecCreator
 
         await tempDir.Directory.FileSystem
             .WriteAllTextAsync(nuspecTempFile, nuspecContent, Encoding.UTF8, cancellationToken)
-            .ConfigureAwait(continueOnCapturedContext: false);
+            ;
 
         var tempFile = tempDir.Directory.FileSystem.GetFileEntry(nuspecTempFile);
         tempFile.CopyTo(packageConfiguration.OutputFile, overwrite: true);

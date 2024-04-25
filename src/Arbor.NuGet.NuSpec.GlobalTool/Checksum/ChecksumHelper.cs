@@ -6,8 +6,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Arbor.FS;
-using Arbor.NuGet.NuSpec.GlobalTool.Extensions;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Zio;
 
@@ -16,7 +14,7 @@ namespace Arbor.NuGet.NuSpec.GlobalTool.Checksum;
 internal static class ChecksumHelper
 {
     public static async Task<FileListWithChecksumFile> CreateFileListForDirectory(
-        [NotNull] DirectoryEntry baseDirectory,
+        DirectoryEntry baseDirectory,
         DirectoryEntry targetDirectory)
     {
         var fileEntries = baseDirectory.EnumerateFiles("*", SearchOption.AllDirectories)
@@ -27,8 +25,7 @@ internal static class ChecksumHelper
 
         foreach (var fileEntry in fileEntries)
         {
-            string fileHashSha512Base64Encoded = await GetFileHashSha512Base64Encoded(fileEntry)
-                .ConfigureAwait(continueOnCapturedContext: false);
+            string fileHashSha512Base64Encoded = await GetFileHashSha512Base64Encoded(fileEntry);
 
             string internalFullPath = fileEntry.FileSystem.ConvertPathToInternal(fileEntry.Path);
 
@@ -48,17 +45,14 @@ internal static class ChecksumHelper
         var contentFilesFile = new FileEntry(baseDirectory.FileSystem,
             UPath.Combine(tempDirectory.FullName, "contentFiles.json"));
 
-        await contentFilesFile.WriteAllTextAsync(json, Encoding.UTF8)
-            .ConfigureAwait(continueOnCapturedContext: false);
+        await contentFilesFile.WriteAllTextAsync(json, Encoding.UTF8);
 
-        string contentFilesFileChecksum = await GetFileHashSha512Base64Encoded(contentFilesFile)
-            .ConfigureAwait(continueOnCapturedContext: false);
+        string contentFilesFileChecksum = await GetFileHashSha512Base64Encoded(contentFilesFile);
 
         var hashFile = new FileEntry(baseDirectory.FileSystem,
             UPath.Combine(tempDirectory.FullName, "contentFiles.json.sha512"));
 
-        await hashFile.WriteAllTextAsync(contentFilesFileChecksum, Encoding.UTF8)
-            .ConfigureAwait(continueOnCapturedContext: false);
+        await hashFile.WriteAllTextAsync(contentFilesFileChecksum, Encoding.UTF8);
 
         string hashFileName = hashFile.Name;
         var hashTargetPath = UPath.Combine(targetDirectory.FullName, hashFileName);
@@ -79,7 +73,7 @@ internal static class ChecksumHelper
 
         await using var fs = fileName.Open(FileMode.Open, FileAccess.Read);
 
-        byte[] fileHash = hashAlgorithm.ComputeHash(fs);
+        byte[] fileHash = await hashAlgorithm.ComputeHashAsync(fs);
 
         return Convert.ToBase64String(fileHash);
     }

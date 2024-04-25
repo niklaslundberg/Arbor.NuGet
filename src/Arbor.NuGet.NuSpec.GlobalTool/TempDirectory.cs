@@ -17,10 +17,7 @@ internal sealed class TempDirectory : IDisposable, IAsyncDisposable
     {
         get
         {
-            if (_directory is null)
-            {
-                throw new ObjectDisposedException(nameof(Directory));
-            }
+            ObjectDisposedException.ThrowIf(_directory is null, this);
 
             return _directory;
         }
@@ -42,7 +39,7 @@ internal sealed class TempDirectory : IDisposable, IAsyncDisposable
             catch (Exception ex) when (!ex.IsFatal())
             {
                 attempt++;
-                await Task.Delay(TimeSpan.FromMilliseconds(value: 50)).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromMilliseconds(value: 50));
             }
         }
     }
@@ -57,7 +54,7 @@ internal sealed class TempDirectory : IDisposable, IAsyncDisposable
         var tmp = _directory;
         _directory = null;
 
-        tmp?.DeleteIfExists();
+        tmp.DeleteIfExists();
     }
 
     public static TempDirectory Create(IFileSystem fileSystem, string? prefix = null)
@@ -73,6 +70,6 @@ internal sealed class TempDirectory : IDisposable, IAsyncDisposable
 
         directoryEntry.EnsureExists();
 
-        return new TempDirectory(directoryEntry);
+        return new(directoryEntry);
     }
 }

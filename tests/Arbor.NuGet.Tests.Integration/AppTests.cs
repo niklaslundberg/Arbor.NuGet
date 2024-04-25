@@ -10,7 +10,6 @@ using Arbor.NuGet.NuSpec.GlobalTool.Application;
 using NuGet.Packaging;
 using Serilog;
 using Serilog.Core;
-using Serilog.Parsing;
 using Xunit;
 using Xunit.Abstractions;
 using Zio;
@@ -18,22 +17,18 @@ using Zio.FileSystems;
 
 namespace Arbor.NuGet.Tests.Integration;
 
-public class AppTests
+public class AppTests(ITestOutputHelper testOutputHelper)
 {
-    private readonly ITestOutputHelper _testOutputHelper;
-
-    public AppTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
-
     private static CancellationTokenSource CreateCancellation() => new(TimeSpan.FromMinutes(value: 1));
 
     private Logger CreateLogger() =>
-        new LoggerConfiguration().WriteTo.TestOutput(_testOutputHelper)
+        new LoggerConfiguration().WriteTo.TestOutput(testOutputHelper)
             .CreateLogger();
 
     [Fact]
     public async Task WhenCreatingNuSpecWithCreateAndMissingOutputThenExitCodeShouldNotBe0()
     {
-        string[] args = {"nuspec", "create", "--source-directory", @"C:\temp"};
+        string[] args = ["nuspec", "create", "--source-directory", @"C:\temp"];
 
         using var app = new App(args, CreateLogger(), new MemoryFileSystem(), CreateCancellation());
         var exitCode = await app.ExecuteAsync();
@@ -44,7 +39,7 @@ public class AppTests
     [Fact]
     public async Task WhenCreatingNuSpecWithMissingCommandThenExitCodeShouldNotBe0()
     {
-        using var app = new App(new[] {"nuspec"}, CreateLogger(), new MemoryFileSystem(), CreateCancellation());
+        using var app = new App(["nuspec"], CreateLogger(), new MemoryFileSystem(), CreateCancellation());
         var exitCode = await app.ExecuteAsync();
 
         Assert.NotEqual(expected: 0, exitCode);
@@ -53,7 +48,7 @@ public class AppTests
     [Fact]
     public async Task WhenCreatingNuSpecWithMissingOptionsThenExitCodeShouldNotBe0()
     {
-        string[] args = {"nuspec", "create"};
+        string[] args = ["nuspec", "create"];
 
         using var app = new App(args, CreateLogger(), new MemoryFileSystem(), CreateCancellation());
         var exitCode = await app.ExecuteAsync();
@@ -68,7 +63,7 @@ public class AppTests
 
         using (var cts = CreateCancellation())
         {
-            using IFileSystem fileSystem = new MemoryFileSystem();
+            using var fileSystem = new MemoryFileSystem();
             await using var sourceDirectory = TempDirectory.Create(fileSystem);
 
             await fileSystem.WriteAllTextAsync(
@@ -78,11 +73,11 @@ public class AppTests
                 cts.Token);
 
             await using var targetDirectory = TempDirectory.Create(fileSystem);
-            using var logger = CreateLogger();
+            await using var logger = CreateLogger();
             var outputFile = UPath.Combine(targetDirectory.Directory.FullName, "result.nuspec");
 
             string[] args =
-            {
+            [
                 "nuspec",
                 "create",
                 "--source-directory",
@@ -93,7 +88,7 @@ public class AppTests
                 "Arbor.Sample",
                 "--package-version",
                 "1.2.3"
-            };
+            ];
 
             using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
             exitCode = await app.ExecuteAsync();
@@ -113,7 +108,7 @@ public class AppTests
     {
         using var cts = CreateCancellation();
 
-        using IFileSystem fileSystem = new PhysicalFileSystem();
+        using var fileSystem = new PhysicalFileSystem();
         await using var sourceDirectory = TempDirectory.Create(fileSystem);
 
         await fileSystem.WriteAllTextAsync(
@@ -123,13 +118,13 @@ public class AppTests
             cts.Token);
 
         await using var targetDirectory = TempDirectory.Create(fileSystem);
-        using var logger = CreateLogger();
+        await using var logger = CreateLogger();
         var outputFile = UPath.Combine(targetDirectory.Directory.FullName, "result.nuspec");
 
         await using var packageDirectory = TempDirectory.Create(fileSystem);
 
         string[] args =
-        {
+        [
             "nuspec",
             "create",
             "--source-directory",
@@ -142,7 +137,7 @@ public class AppTests
             "1.2.3",
             "--package-directory",
             $"{packageDirectory.Directory.FullName}"
-        };
+        ];
 
         using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
         int exitCode = await app.ExecuteAsync();
@@ -164,8 +159,8 @@ public class AppTests
         using var reader = new PackageArchiveReader(packageStream);
 
         string[] files = reader.GetFiles()
-            .Where(file => !file.StartsWith("[")
-                           && !file.StartsWith("_")
+            .Where(file => !file.StartsWith('[')
+                           && !file.StartsWith('_')
                            && !file.StartsWith("package/")
             )
             .ToArray();
@@ -184,7 +179,7 @@ public class AppTests
     {
         using var cts = CreateCancellation();
 
-        using IFileSystem fileSystem = new PhysicalFileSystem();
+        using var fileSystem = new PhysicalFileSystem();
         await using var sourceDirectory = TempDirectory.Create(fileSystem);
 
         await fileSystem.WriteAllTextAsync(
@@ -194,12 +189,12 @@ public class AppTests
             cts.Token);
 
         await using var targetDirectory = TempDirectory.Create(fileSystem);
-        using var logger = CreateLogger();
+        await using var logger = CreateLogger();
 
         await using var packageDirectory = TempDirectory.Create(fileSystem);
 
         string[] args =
-        {
+        [
             "package",
             "create",
             "--source-directory",
@@ -210,7 +205,7 @@ public class AppTests
             "1.2.3",
             "--package-directory",
             $"{packageDirectory.Directory.FullName}"
-        };
+        ];
 
         using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
         int exitCode = await app.ExecuteAsync();
@@ -230,8 +225,8 @@ public class AppTests
         }
 
         string[] filteredFiles = files
-            .Where(file => !file.StartsWith("[")
-                           && !file.StartsWith("_")
+            .Where(file => !file.StartsWith('[')
+                           && !file.StartsWith('_')
                            && !file.StartsWith("package/"))
             .ToArray();
 
@@ -249,7 +244,7 @@ public class AppTests
     {
         using var cts = CreateCancellation();
 
-        using IFileSystem fileSystem = new PhysicalFileSystem();
+        using var fileSystem = new PhysicalFileSystem();
         await using var sourceDirectory = TempDirectory.Create(fileSystem);
 
         await fileSystem.WriteAllTextAsync(
@@ -259,12 +254,12 @@ public class AppTests
             cts.Token);
 
         await using var targetDirectory = TempDirectory.Create(fileSystem);
-        using var logger = CreateLogger();
+        await using var logger = CreateLogger();
 
         await using var packageDirectory = TempDirectory.Create(fileSystem);
 
         string[] args =
-        {
+        [
             "package",
             "create",
             "--source-directory",
@@ -277,7 +272,7 @@ public class AppTests
             $"{packageDirectory.Directory.FullName}",
             "--pre-release-version",
             "-beta.4.5.6+hash-12345"
-        };
+        ];
 
         using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
         int exitCode = await app.ExecuteAsync();
@@ -299,8 +294,8 @@ public class AppTests
             }
 
             string[] filteredFiles = files
-                .Where(file => !file.StartsWith("[")
-                               && !file.StartsWith("_")
+                .Where(file => !file.StartsWith('[')
+                               && !file.StartsWith('_')
                                && !file.StartsWith("package/"))
                 .ToArray();
 
@@ -314,12 +309,12 @@ public class AppTests
         }
 
         string[] versionArgs =
-        {
+        [
             "package-metadata",
             "version",
             "--package-file",
             packagePath.FullName
-        };
+        ];
 
         var logEventSink = new ActionSink("{Message:l}");
 
@@ -344,26 +339,28 @@ public class AppTests
 
         using (var cts = CreateCancellation())
         {
-            using IFileSystem fileSystem = new PhysicalFileSystem();
+            using var fileSystem = new PhysicalFileSystem();
             await using var versionTempDirectory = TempDirectory.Create(fileSystem);
 
-            const string jsonVersionFileContent = @"{
-    ""version"": ""1.0"",
-    ""keys"": [
-      {
-        ""key"": ""major"",
-        ""value"": 1
-      },
-      {
-        ""key"": ""minor"",
-        ""value"": 2
-      },
-      {
-        ""key"": ""patch"",
-        ""value"": 3
-      }
-    ]
-  }";
+            const string jsonVersionFileContent = """
+                                                  {
+                                                      "version": "1.0",
+                                                      "keys": [
+                                                        {
+                                                          "key": "major",
+                                                          "value": 1
+                                                        },
+                                                        {
+                                                          "key": "minor",
+                                                          "value": 2
+                                                        },
+                                                        {
+                                                          "key": "patch",
+                                                          "value": 3
+                                                        }
+                                                      ]
+                                                    }
+                                                  """;
 
             var versionJsonPath =
                 UPath.Combine(versionTempDirectory.Directory.Path, Guid.NewGuid() + "_version.json");
@@ -380,11 +377,11 @@ public class AppTests
                 cts.Token);
 
             await using var targetDirectory = TempDirectory.Create(fileSystem);
-            using var logger = CreateLogger();
+            await using var logger = CreateLogger();
             var outputFile = UPath.Combine(targetDirectory.Directory.FullName, "result.nuspec");
 
             string[] args =
-            {
+            [
                 "nuspec",
                 "create",
                 "--source-directory",
@@ -395,7 +392,7 @@ public class AppTests
                 "Arbor.Sample",
                 "--version-file",
                 versionJsonPath.FullName
-            };
+            ];
 
             using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
             exitCode = await app.ExecuteAsync();
@@ -419,14 +416,16 @@ public class AppTests
 
         using (var cts = CreateCancellation())
         {
-            using IFileSystem fileSystem = new PhysicalFileSystem();
+            using var fileSystem = new PhysicalFileSystem();
             await using var versionTempDirectory = TempDirectory.Create(fileSystem);
 
-            const string jsonVersionFileContent = @"<Project>
- <PropertyGroup>
-   <Version>3.2.1</Version>
- </PropertyGroup>
-</Project>";
+            const string jsonVersionFileContent = """
+                                                  <Project>
+                                                   <PropertyGroup>
+                                                     <Version>3.2.1</Version>
+                                                   </PropertyGroup>
+                                                  </Project>
+                                                  """;
 
             var versionJsonPath = UPath.Combine(versionTempDirectory.Directory.Path,
                 Guid.NewGuid() + ".Directory.Build.props");
@@ -443,11 +442,11 @@ public class AppTests
                 cts.Token);
 
             await using var targetDirectory = TempDirectory.Create(fileSystem);
-            using var logger = CreateLogger();
+            await using var logger = CreateLogger();
             var outputFile = UPath.Combine(targetDirectory.Directory.FullName, "result.nuspec");
 
             string[] args =
-            {
+            [
                 "nuspec",
                 "create",
                 "--source-directory",
@@ -458,7 +457,7 @@ public class AppTests
                 "Arbor.Sample",
                 "--msbuild-version-file",
                 versionJsonPath.FullName
-            };
+            ];
 
             using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
             exitCode = await app.ExecuteAsync();
@@ -478,7 +477,7 @@ public class AppTests
     [Fact]
     public async Task WhenRunningWithWithEmptyArgsThenExitCodeShouldNotBe0()
     {
-        using var app = new App(Array.Empty<string>(), CreateLogger(), new MemoryFileSystem(),
+        using var app = new App([], CreateLogger(), new MemoryFileSystem(),
             CreateCancellation());
 
         var exitCode = await app.ExecuteAsync();

@@ -63,7 +63,7 @@ internal static class NuSpecCommandDefinition
 
         if (!string.IsNullOrWhiteSpace(options.PackageVersion))
         {
-            if (SemanticVersion.TryParse(options.PackageVersion, out SemanticVersion parsedVersion))
+            if (SemanticVersion.TryParse(options.PackageVersion, out SemanticVersion? parsedVersion))
             {
                 version = parsedVersion;
             }
@@ -209,7 +209,7 @@ internal static class NuSpecCommandDefinition
             logger,
             new DirectoryEntry(fileSystem, options.SourceDirectory!.ParseAsPath()),
             nuspecPath,
-            cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+            cancellationToken);
 
         if (exitCode != 0)
         {
@@ -224,7 +224,7 @@ internal static class NuSpecCommandDefinition
 
             int packageExitCode = await NuGetPacker.PackNuSpec(
                 outputFileEntry, packageFilePath, logger,
-                cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+                cancellationToken);
 
             if (packageExitCode != 0)
             {

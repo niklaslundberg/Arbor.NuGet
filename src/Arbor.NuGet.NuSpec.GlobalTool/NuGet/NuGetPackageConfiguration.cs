@@ -1,13 +1,12 @@
-﻿using JetBrains.Annotations;
-using Zio;
+﻿using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet;
 
 internal class NuGetPackageConfiguration
 {
     public NuGetPackageConfiguration(
-        [NotNull] PackageDefinition packageDefinition,
-        [NotNull] DirectoryEntry sourceDirectory,
+        PackageDefinition packageDefinition,
+        DirectoryEntry sourceDirectory,
         UPath outputFile)
     {
         PackageDefinition = packageDefinition;
@@ -17,7 +16,7 @@ internal class NuGetPackageConfiguration
 
     public UPath OutputFile { get; }
 
-    [NotNull] public PackageDefinition PackageDefinition { get; }
+    public PackageDefinition PackageDefinition { get; }
 
-    [NotNull] public DirectoryEntry SourceDirectory { get; }
+    public DirectoryEntry SourceDirectory { get; }
 }

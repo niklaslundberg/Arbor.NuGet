@@ -26,12 +26,14 @@ internal static class NuGetPacker
             throw new OperationCanceledException("Cancellation is requested");
         }
 
-        return PackNuSpecInternal(nuSpecFile, packagePath, logger);
+        return PackNuSpecInternal(nuSpecFile, packagePath, logger, cancellationToken);
     }
 
-    private static async Task<int> PackNuSpecInternal(FileEntry nuSpecFile,
+    private static async Task<int> PackNuSpecInternal(
+        FileEntry nuSpecFile,
         UPath packagePath,
-        ILogger logger)
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
         new DirectoryEntry(nuSpecFile.FileSystem, packagePath.GetDirectory()).EnsureExists();
 

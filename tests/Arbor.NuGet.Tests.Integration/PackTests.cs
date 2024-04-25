@@ -14,17 +14,13 @@ using Zio.FileSystems;
 
 namespace Arbor.NuGet.Tests.Integration;
 
-public class PackTests
+public class PackTests(ITestOutputHelper testOutputHelper)
 {
-    private readonly ITestOutputHelper _testOutputHelper;
-
-    public PackTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
-
     private static CancellationTokenSource CreateCancellation() =>
         new(TimeSpan.FromMinutes(value: 1));
 
     private Logger CreateLogger() =>
-        new LoggerConfiguration().WriteTo.TestOutput(_testOutputHelper)
+        new LoggerConfiguration().WriteTo.TestOutput(testOutputHelper)
             .CreateLogger();
 
     [Fact]
@@ -34,7 +30,7 @@ public class PackTests
 
         using (var cts = CreateCancellation())
         {
-            using IFileSystem fileSystem = new PhysicalFileSystem();
+            using var fileSystem = new PhysicalFileSystem();
             await using var sourceDirectory = TempDirectory.Create(fileSystem);
 
             await fileSystem.WriteAllTextAsync(
@@ -44,7 +40,7 @@ public class PackTests
                 cts.Token);
 
             await using var targetDirectory = TempDirectory.Create(fileSystem);
-            using var logger = CreateLogger();
+            await using var logger = CreateLogger();
             var outputFile = UPath.Combine(targetDirectory.Directory.Path, "result.nuspec");
 
             await using var packageTargetDirectory = TempDirectory.Create(fileSystem);
@@ -54,7 +50,7 @@ public class PackTests
             var packageFile = outputDirectory.Directory.Path / "Arbor.Sample.1.2.3.nupkg";
 
             string[] args =
-            {
+            [
                 "nuspec",
                 "create",
                 "--source-directory",
@@ -65,7 +61,7 @@ public class PackTests
                 "Arbor.Sample",
                 "--package-version",
                 "1.2.3"
-            };
+            ];
 
             using var app = new App(args, logger, fileSystem, cts, true);
             exitCode = await app.ExecuteAsync();
@@ -73,9 +69,9 @@ public class PackTests
             Assert.Equal(0, exitCode);
 
             string[] packArgs =
-            {
+            [
                 "pack", "nuspec", "--nuspec-file", $"{outputFile}", $"--package-directory={outputDirectory.Directory.Path}"
-            };
+            ];
 
             Assert.True(fileSystem.FileExists(outputFile));
 

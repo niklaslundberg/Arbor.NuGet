@@ -1,7 +1,5 @@
 ﻿using System;
-using System.CommandLine;
 using System.CommandLine.Builder;
-using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,33 +12,17 @@ using Zio;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Application;
 
-public sealed class App : IDisposable
+public sealed class App(string[] args, ILogger logger, IFileSystem fileSystem, CancellationTokenSource cancellationTokenSource, bool leaveFileSystemOpen = false)
+    : IDisposable
 {
-    private readonly string[] _args;
-
-    private readonly CancellationTokenSource _cancellationTokenSource;
-    private readonly bool _leaveFileSystemOpen;
-
-    private readonly ILogger _logger;
-    private readonly IFileSystem _fileSystem;
-
-    public App(string[] args, ILogger logger, IFileSystem fileSystem, CancellationTokenSource cancellationTokenSource, bool leaveFileSystemOpen = false)
-    {
-        _args = args;
-        _logger = logger;
-        _fileSystem = fileSystem;
-        _cancellationTokenSource = cancellationTokenSource;
-        _leaveFileSystemOpen = leaveFileSystemOpen;
-    }
-
     public void Dispose()
     {
-        if (!_leaveFileSystemOpen)
+        if (!leaveFileSystemOpen)
         {
-            _fileSystem.Dispose();
+            fileSystem.Dispose();
         }
 
-        _cancellationTokenSource.Dispose();
+        cancellationTokenSource.Dispose();
     }
 
     public async Task<ExitCode> ExecuteAsync()
@@ -51,17 +33,16 @@ public sealed class App : IDisposable
 
             int exitCode;
 
-            using (var serilogAdapter = new SerilogAdapter(_logger))
+            using (var serilogAdapter = new SerilogAdapter(logger))
             {
-                exitCode = await parser.InvokeAsync(_args, serilogAdapter)
-                    .ConfigureAwait(continueOnCapturedContext: false);
+                exitCode = await parser.InvokeAsync(args, serilogAdapter);
             }
 
-            return new ExitCode(exitCode);
+            return new(exitCode);
         }
         catch (Exception ex) when (!ex.IsFatal())
         {
-            _logger.Error(ex, "Could not create nuspec");
+            logger.Error(ex, "Could not create nuspec");
             return ExitCode.Failure;
         }
     }
@@ -69,10 +50,10 @@ public sealed class App : IDisposable
     private Parser CreateParser()
     {
         var parser = new CommandLineBuilder()
-            .AddCommand(NuSpecCommandDefinition.Tool(_logger, _fileSystem, _cancellationTokenSource.Token))
-            .AddCommand(NuSpecCommandDefinition.CreatePackage(_logger, _fileSystem, _cancellationTokenSource.Token))
-            .AddCommand(PackCommandDefinition.Tool(_logger, _fileSystem, _cancellationTokenSource.Token))
-            .AddCommand(PackageMetadataCommandDefinition.Tool(_logger, _fileSystem, _cancellationTokenSource.Token))
+            .AddCommand(NuSpecCommandDefinition.Tool(logger, fileSystem, cancellationTokenSource.Token))
+            .AddCommand(NuSpecCommandDefinition.CreatePackage(logger, fileSystem, cancellationTokenSource.Token))
+            .AddCommand(PackCommandDefinition.Tool(logger, fileSystem, cancellationTokenSource.Token))
+            .AddCommand(PackageMetadataCommandDefinition.Tool(logger, fileSystem, cancellationTokenSource.Token))
             .UseVersionOption()
             .UseHelp().UseParseDirective().UseDebugDirective().UseSuggestDirective().RegisterWithDotnetSuggest()
             .UseParseErrorReporting().UseExceptionHandler().Build();

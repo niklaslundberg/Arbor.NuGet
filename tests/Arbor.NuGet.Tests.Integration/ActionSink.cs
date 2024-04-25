@@ -18,10 +18,10 @@ public sealed class ActionSink : ILogEventSink, IDisposable
     public ActionSink(string outputTemplate = "{Message:l}")
     {
         _formatter = new MessageTemplateTextFormatter(outputTemplate, CultureInfo.InvariantCulture);
-        _logEvents = new List<string>();
+        _logEvents = [];
     }
 
-    public ImmutableArray<string> LogEvents => _logEvents.ToImmutableArray();
+    public ImmutableArray<string> LogEvents => [.._logEvents];
 
     public void Dispose() => _logEvents.Clear();
 

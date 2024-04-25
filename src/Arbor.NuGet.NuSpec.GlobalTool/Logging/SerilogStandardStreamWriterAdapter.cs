@@ -6,12 +6,9 @@ using Serilog;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Logging;
 
-internal sealed class SerilogStandardStreamWriterAdapter : IStandardStreamWriter, IDisposable
+internal sealed class SerilogStandardStreamWriterAdapter(ILogger logger) : IStandardStreamWriter, IDisposable
 {
-    private readonly List<string> _buffer = new();
-    private readonly ILogger _logger;
-
-    public SerilogStandardStreamWriterAdapter(ILogger logger) => _logger = logger;
+    private readonly List<string> _buffer = [];
 
     public void Dispose() => Flush();
 
@@ -29,9 +26,9 @@ internal sealed class SerilogStandardStreamWriterAdapter : IStandardStreamWriter
 
     private void Flush()
     {
-        if (_buffer.Any())
+        if (_buffer.Count > 0)
         {
-            _logger.Information("{Message}", string.Concat(_buffer));
+            logger.Information("{Message}", string.Concat(_buffer));
         }
 
         _buffer.Clear();

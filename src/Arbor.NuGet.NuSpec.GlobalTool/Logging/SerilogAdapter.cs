@@ -5,15 +5,9 @@ using Serilog;
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.Logging;
 
-internal sealed class SerilogAdapter : IConsole, IDisposable
+internal sealed class SerilogAdapter(ILogger logger) : IConsole, IDisposable
 {
-    public SerilogAdapter(ILogger logger)
-    {
-        Out = new SerilogStandardStreamWriterAdapter(logger);
-        Error = new SerilogStandardStreamWriterAdapter(logger);
-    }
-
-    public IStandardStreamWriter Error { get; }
+    public IStandardStreamWriter Error { get; } = new SerilogStandardStreamWriterAdapter(logger);
 
     public bool IsErrorRedirected { get; } = true;
 
@@ -21,7 +15,7 @@ internal sealed class SerilogAdapter : IConsole, IDisposable
 
     public bool IsOutputRedirected { get; } = true;
 
-    public IStandardStreamWriter Out { get; }
+    public IStandardStreamWriter Out { get; } = new SerilogStandardStreamWriterAdapter(logger);
 
     public void Dispose()
     {

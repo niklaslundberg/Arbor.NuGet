@@ -16,7 +16,7 @@ public static class AppStarter
 
         using (var app = Start(args))
         {
-            exitCode = await app.ExecuteAsync().ConfigureAwait(continueOnCapturedContext: false);
+            exitCode = await app.ExecuteAsync();
         }
 
         if (Debugger.IsAttached)
@@ -36,7 +36,7 @@ public static class AppStarter
 
         var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(value: 1));
 
-        var app = new App(args ?? Array.Empty<string>(), logger, fileSystem ?? new PhysicalFileSystem(), cancellationTokenSource);
+        var app = new App(args ?? [], logger, fileSystem ?? new PhysicalFileSystem(), cancellationTokenSource);
 
         return app;
     }
