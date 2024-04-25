@@ -4,37 +4,36 @@ using System.CommandLine.IO;
 using System.Linq;
 using Serilog;
 
-namespace Arbor.NuGet.NuSpec.GlobalTool.Logging
+namespace Arbor.NuGet.NuSpec.GlobalTool.Logging;
+
+internal sealed class SerilogStandardStreamWriterAdapter : IStandardStreamWriter, IDisposable
 {
-    internal sealed class SerilogStandardStreamWriterAdapter : IStandardStreamWriter, IDisposable
+    private readonly List<string> _buffer = new();
+    private readonly ILogger _logger;
+
+    public SerilogStandardStreamWriterAdapter(ILogger logger) => _logger = logger;
+
+    public void Dispose() => Flush();
+
+    public void Write(string value)
     {
-        private readonly List<string> _buffer = new();
-        private readonly ILogger _logger;
+        _buffer.Add(value);
 
-        public SerilogStandardStreamWriterAdapter(ILogger logger) => _logger = logger;
-
-        public void Dispose() => Flush();
-
-        public void Write(string value)
+        if (string.IsNullOrWhiteSpace(value))
         {
-            _buffer.Add(value);
-
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return;
-            }
-
-            Flush();
+            return;
         }
 
-        private void Flush()
-        {
-            if (_buffer.Any())
-            {
-                _logger.Information("{Message}", string.Concat(_buffer));
-            }
+        Flush();
+    }
 
-            _buffer.Clear();
+    private void Flush()
+    {
+        if (_buffer.Any())
+        {
+            _logger.Information("{Message}", string.Concat(_buffer));
         }
+
+        _buffer.Clear();
     }
 }
