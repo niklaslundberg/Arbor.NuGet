@@ -1,9 +1,6 @@
-﻿namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet
-{
-    public class PackageId
-    {
-        public PackageId(string id) => Id = id;
+﻿namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet;
 
-        public string Id { get; }
-    }
+public class PackageId(string id)
+{
+    public string Id { get; } = id;
 }

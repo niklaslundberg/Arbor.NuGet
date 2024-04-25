@@ -11,257 +11,256 @@ using NuGet.Versioning;
 using Serilog;
 using Zio;
 
-namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
+namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine;
+
+internal static class NuSpecCommandDefinition
 {
-    internal static class NuSpecCommandDefinition
+    private static readonly Option SourceDirectory =
+        new Option<string?>(
+            "--source-directory",
+            Strings.SourceDirectoryDescription);
+
+    private static readonly Option OutputFile =
+        new Option<string?>(
+            "--output-file",
+            Strings.OutputFileDescription);
+
+    private static readonly Option PackageId =
+        new Option<string?>(
+            "--package-id",
+            Strings.PackageIdDescription);
+
+    private static readonly Option PackageVersion =
+        new Option<string?>(
+            "--package-version",
+            Strings.PackageVersionDescription);
+
+    private static readonly Option VersionFile =
+        new Option<string?>(
+            "--version-file",
+            Strings.VersionFile);
+
+    private static readonly Option MsBuildVersionFile =
+        new Option<string?>(
+            "--msbuild-version-file",
+            Strings.MsBuildVersionFile);
+
+    private static readonly Option PackageDirectory =
+        new Option<string?>(
+            "--package-directory",
+            Strings.PackageOutputDirectory);
+
+    private static readonly Option PreReleaseVersion =
+        new Option<string?>(
+            "--pre-release-version",
+            Strings.PackageOutputDirectory);
+
+    private static SemanticVersion GetVersion(CommandOptions options,
+        IFileSystem fileSystem,
+        ILogger logger)
     {
-        private static readonly Option SourceDirectory =
-            new Option<string?>(
-                "--source-directory",
-                Strings.SourceDirectoryDescription);
+        SemanticVersion? version = null;
 
-        private static readonly Option OutputFile =
-            new Option<string?>(
-                "--output-file",
-                Strings.OutputFileDescription);
-
-        private static readonly Option PackageId =
-            new Option<string?>(
-                "--package-id",
-                Strings.PackageIdDescription);
-
-        private static readonly Option PackageVersion =
-            new Option<string?>(
-                "--package-version",
-                Strings.PackageVersionDescription);
-
-        private static readonly Option VersionFile =
-            new Option<string?>(
-                "--version-file",
-                Strings.VersionFile);
-
-        private static readonly Option MsBuildVersionFile =
-            new Option<string?>(
-                "--msbuild-version-file",
-                Strings.MsBuildVersionFile);
-
-        private static readonly Option PackageDirectory =
-            new Option<string?>(
-                "--package-directory",
-                Strings.PackageOutputDirectory);
-
-        private static readonly Option PreReleaseVersion =
-            new Option<string?>(
-                "--pre-release-version",
-                Strings.PackageOutputDirectory);
-
-        private static SemanticVersion GetVersion(CommandOptions options,
-            IFileSystem fileSystem,
-            ILogger logger)
+        if (!string.IsNullOrWhiteSpace(options.PackageVersion))
         {
-            SemanticVersion? version = null;
-
-            if (!string.IsNullOrWhiteSpace(options.PackageVersion))
+            if (SemanticVersion.TryParse(options.PackageVersion, out SemanticVersion? parsedVersion))
             {
-                if (SemanticVersion.TryParse(options.PackageVersion, out SemanticVersion parsedVersion))
-                {
-                    version = parsedVersion;
-                }
-                else
-                {
-                    logger.Error("Invalid semver '{PackageVersion}'", options.PackageVersion);
-                }
-            }
-            else if (!string.IsNullOrWhiteSpace(options.VersionFile))
-            {
-                var versionFromFile =
-                    JsonFileVersionHelper.GetVersionFromJsonFile(options.VersionFile!.ParseAsPath(), fileSystem, logger);
-
-                if (versionFromFile is { })
-                {
-                    version = versionFromFile;
-                }
-                else
-                {
-                    logger.Error("Could not get version from file '{VersionFile}'", options.VersionFile);
-                }
+                version = parsedVersion;
             }
             else
             {
-                var versionFromFile =
-                    JsonFileVersionHelper.GetVersionFromMsBuildFile(options.MsBuildVersionFile!.ParseAsPath(), fileSystem,
-                        logger);
-
-                if (versionFromFile is { })
-                {
-                    version = versionFromFile;
-                }
-                else
-                {
-                    logger.Error("Could not get version from MSBuild file '{VersionFile}'", options.MsBuildVersionFile);
-                }
+                logger.Error("Invalid semver '{PackageVersion}'", options.PackageVersion);
             }
+        }
+        else if (!string.IsNullOrWhiteSpace(options.VersionFile))
+        {
+            var versionFromFile =
+                JsonFileVersionHelper.GetVersionFromJsonFile(options.VersionFile!.ParseAsPath(), fileSystem, logger);
 
-            if (version is null)
+            if (versionFromFile is { })
             {
-                throw new InvalidOperationException("Could not get version");
+                version = versionFromFile;
             }
-
-            if (!string.IsNullOrWhiteSpace(options.PreReleaseVersion) && !version.IsPrerelease)
+            else
             {
-                string preReleaseVersionAttempt = $"{version.ToNormalizedString()}-{options.PreReleaseVersion.TrimStart('-')}";
-
-                if (SemanticVersion.TryParse(preReleaseVersionAttempt, out var preReleaseVersion))
-                {
-                    version = preReleaseVersion;
-                }
-                else
-                {
-                    throw new InvalidOperationException($"Could not get version with pre-release '{preReleaseVersionAttempt}'");
-                }
+                logger.Error("Could not get version from file '{VersionFile}'", options.VersionFile);
             }
-            else if (!string.IsNullOrWhiteSpace(options.PreReleaseVersion) && version.IsPrerelease)
+        }
+        else
+        {
+            var versionFromFile =
+                JsonFileVersionHelper.GetVersionFromMsBuildFile(options.MsBuildVersionFile!.ParseAsPath(), fileSystem,
+                    logger);
+
+            if (versionFromFile is { })
             {
-                logger.Warning("The version number already is already a preview version, skipping pre-release argument '{VersionFile}'", options.MsBuildVersionFile);
+                version = versionFromFile;
             }
-
-            return version;
+            else
+            {
+                logger.Error("Could not get version from MSBuild file '{VersionFile}'", options.MsBuildVersionFile);
+            }
         }
 
-        public static Command Tool(ILogger logger, IFileSystem fileSystem, CancellationToken cancellationToken)
+        if (version is null)
         {
-            var tool = new Command("nuspec", Strings.NuSpecDescription);
-
-            Command NuSpec()
-            {
-                var command = new Command(
-                    "create",
-                    Strings.CreateDescription);
-
-                command.AddOption(SourceDirectory);
-                command.AddOption(OutputFile);
-                command.AddOption(PackageId);
-                command.AddOption(PackageVersion);
-                command.AddOption(VersionFile);
-                command.AddOption(MsBuildVersionFile);
-                command.AddOption(PackageDirectory);
-                command.AddOption(PreReleaseVersion);
-
-                command.Handler = CommandHandler.Create<CommandOptions>(options =>
-                    BindAndValidate(options, logger, fileSystem, cancellationToken));
-
-                return command;
-            }
-
-            tool.AddCommand(NuSpec());
-
-            return tool;
+            throw new InvalidOperationException("Could not get version");
         }
 
-        public static Command CreatePackage(ILogger logger, IFileSystem fileSystem, CancellationToken cancellationToken)
+        if (!string.IsNullOrWhiteSpace(options.PreReleaseVersion) && !version.IsPrerelease)
         {
-            var tool = new Command("package", Strings.NuSpecDescription);
+            string preReleaseVersionAttempt = $"{version.ToNormalizedString()}-{options.PreReleaseVersion.TrimStart('-')}";
 
-            Command NuSpec()
+            if (SemanticVersion.TryParse(preReleaseVersionAttempt, out var preReleaseVersion))
             {
-                var command = new Command(
-                    "create",
-                    Strings.CreateDescription);
-
-                command.AddOption(SourceDirectory);
-                command.AddOption(PackageId);
-                command.AddOption(PackageVersion);
-                command.AddOption(VersionFile);
-                command.AddOption(MsBuildVersionFile);
-                command.AddOption(PackageDirectory);
-                command.AddOption(PreReleaseVersion);
-
-                command.Handler = CommandHandler.Create<CommandOptions>(options =>
-                    BindAndValidate(options, logger, fileSystem, cancellationToken));
-
-                return command;
+                version = preReleaseVersion;
             }
-
-            tool.AddCommand(NuSpec());
-
-            return tool;
+            else
+            {
+                throw new InvalidOperationException($"Could not get version with pre-release '{preReleaseVersionAttempt}'");
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(options.PreReleaseVersion) && version.IsPrerelease)
+        {
+            logger.Warning("The version number already is already a preview version, skipping pre-release argument '{VersionFile}'", options.MsBuildVersionFile);
         }
 
-        private static async Task<int> Bind(
-            CommandOptions options,
-            ILogger logger,
-            IFileSystem fileSystem,
-            CancellationToken cancellationToken)
+        return version;
+    }
+
+    public static Command Tool(ILogger logger, IFileSystem fileSystem, CancellationToken cancellationToken)
+    {
+        var tool = new Command("nuspec", Strings.NuSpecDescription);
+
+        Command NuSpec()
         {
-            var version = GetVersion(options, fileSystem, logger);
+            var command = new Command(
+                "create",
+                Strings.CreateDescription);
 
-            var packageDefinition = new PackageDefinition(
-                new PackageId(options.PackageId!),
-                version);
+            command.AddOption(SourceDirectory);
+            command.AddOption(OutputFile);
+            command.AddOption(PackageId);
+            command.AddOption(PackageVersion);
+            command.AddOption(VersionFile);
+            command.AddOption(MsBuildVersionFile);
+            command.AddOption(PackageDirectory);
+            command.AddOption(PreReleaseVersion);
 
-            await using var tempDirectory = TempDirectory.Create(fileSystem, "arbognuget_nuspec");
+            command.Handler = CommandHandler.Create<CommandOptions>(options =>
+                BindAndValidate(options, logger, fileSystem, cancellationToken));
 
-            UPath nuspecPath = options.OutputFile?.ParseAsPath() ??
-                               tempDirectory.Directory.Path / $"{options.PackageId}_{Guid.NewGuid()}.nuspec";
+            return command;
+        }
 
-            int exitCode = await NuSpecCreator.CreateSpecificationAsync(
-                packageDefinition,
-                logger,
-                new DirectoryEntry(fileSystem, options.SourceDirectory!.ParseAsPath()),
-                nuspecPath,
-                cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+        tool.AddCommand(NuSpec());
 
-            if (exitCode != 0)
-            {
-                return exitCode;
-            }
+        return tool;
+    }
 
-            if (!string.IsNullOrWhiteSpace(options.PackageDirectory))
-            {
-                var outputFileEntry = fileSystem.GetFileEntry(nuspecPath);
-                string packageFileName = $"{options.PackageId}.{version.ToNormalizedString()}.nupkg";
-                var packageFilePath = options.PackageDirectory.ParseAsPath() / packageFileName;
+    public static Command CreatePackage(ILogger logger, IFileSystem fileSystem, CancellationToken cancellationToken)
+    {
+        var tool = new Command("package", Strings.NuSpecDescription);
 
-                int packageExitCode = await NuGetPacker.PackNuSpec(
-                    outputFileEntry, packageFilePath, logger,
-                    cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+        Command NuSpec()
+        {
+            var command = new Command(
+                "create",
+                Strings.CreateDescription);
 
-                if (packageExitCode != 0)
-                {
-                    return packageExitCode;
-                }
-            }
+            command.AddOption(SourceDirectory);
+            command.AddOption(PackageId);
+            command.AddOption(PackageVersion);
+            command.AddOption(VersionFile);
+            command.AddOption(MsBuildVersionFile);
+            command.AddOption(PackageDirectory);
+            command.AddOption(PreReleaseVersion);
 
+            command.Handler = CommandHandler.Create<CommandOptions>(options =>
+                BindAndValidate(options, logger, fileSystem, cancellationToken));
+
+            return command;
+        }
+
+        tool.AddCommand(NuSpec());
+
+        return tool;
+    }
+
+    private static async Task<int> Bind(
+        CommandOptions options,
+        ILogger logger,
+        IFileSystem fileSystem,
+        CancellationToken cancellationToken)
+    {
+        var version = GetVersion(options, fileSystem, logger);
+
+        var packageDefinition = new PackageDefinition(
+            new PackageId(options.PackageId!),
+            version);
+
+        await using var tempDirectory = TempDirectory.Create(fileSystem, "arbognuget_nuspec");
+
+        UPath nuspecPath = options.OutputFile?.ParseAsPath() ??
+                           tempDirectory.Directory.Path / $"{options.PackageId}_{Guid.NewGuid()}.nuspec";
+
+        int exitCode = await NuSpecCreator.CreateSpecificationAsync(
+            packageDefinition,
+            logger,
+            new DirectoryEntry(fileSystem, options.SourceDirectory!.ParseAsPath()),
+            nuspecPath,
+            cancellationToken);
+
+        if (exitCode != 0)
+        {
             return exitCode;
         }
 
-        private static Task<int> BindAndValidate(
-            CommandOptions options,
-            ILogger logger,
-            IFileSystem fileSystem,
-            CancellationToken cancellationToken)
+        if (!string.IsNullOrWhiteSpace(options.PackageDirectory))
         {
-            if (string.IsNullOrWhiteSpace(options.SourceDirectory))
-            {
-                logger.Error("Missing expected --{Arg} argument", SourceDirectory.Aliases.FirstOrDefault());
-                return Task.FromResult(result: 1);
-            }
+            var outputFileEntry = fileSystem.GetFileEntry(nuspecPath);
+            string packageFileName = $"{options.PackageId}.{version.ToNormalizedString()}.nupkg";
+            var packageFilePath = options.PackageDirectory.ParseAsPath() / packageFileName;
 
-            if (string.IsNullOrWhiteSpace(options.PackageId))
-            {
-                logger.Error("Missing expected --{Arg} argument", PackageId.Aliases.FirstOrDefault());
-                return Task.FromResult(result: 3);
-            }
+            int packageExitCode = await NuGetPacker.PackNuSpec(
+                outputFileEntry, packageFilePath, logger,
+                cancellationToken);
 
-            if (string.IsNullOrWhiteSpace(options.PackageVersion) &&
-                string.IsNullOrWhiteSpace(options.VersionFile) &&
-                string.IsNullOrWhiteSpace(options.MsBuildVersionFile))
+            if (packageExitCode != 0)
             {
-                logger.Error("Missing expected --{Arg} argument", PackageVersion.Aliases.FirstOrDefault());
-                return Task.FromResult(result: 4);
+                return packageExitCode;
             }
-
-            return Bind(options, logger, fileSystem, cancellationToken);
         }
+
+        return exitCode;
+    }
+
+    private static Task<int> BindAndValidate(
+        CommandOptions options,
+        ILogger logger,
+        IFileSystem fileSystem,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(options.SourceDirectory))
+        {
+            logger.Error("Missing expected --{Arg} argument", SourceDirectory.Aliases.FirstOrDefault());
+            return Task.FromResult(result: 1);
+        }
+
+        if (string.IsNullOrWhiteSpace(options.PackageId))
+        {
+            logger.Error("Missing expected --{Arg} argument", PackageId.Aliases.FirstOrDefault());
+            return Task.FromResult(result: 3);
+        }
+
+        if (string.IsNullOrWhiteSpace(options.PackageVersion) &&
+            string.IsNullOrWhiteSpace(options.VersionFile) &&
+            string.IsNullOrWhiteSpace(options.MsBuildVersionFile))
+        {
+            logger.Error("Missing expected --{Arg} argument", PackageVersion.Aliases.FirstOrDefault());
+            return Task.FromResult(result: 4);
+        }
+
+        return Bind(options, logger, fileSystem, cancellationToken);
     }
 }

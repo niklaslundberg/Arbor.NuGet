@@ -1,33 +1,21 @@
-﻿namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine
-{
-    internal class CommandOptions
-    {
-        public CommandOptions(string? sourceDirectory,
-            string? outputFile,
-            string? packageId,
-            string? packageVersion,
-            string? versionFile,
-            string? msBuildVersionFile,
-            string? packageDirectory,
-            string? preReleaseVersion = null)
-        {
-            SourceDirectory = sourceDirectory;
-            OutputFile = outputFile;
-            PackageId = packageId;
-            PackageVersion = packageVersion;
-            VersionFile = versionFile;
-            MsBuildVersionFile = msBuildVersionFile;
-            PackageDirectory = packageDirectory;
-            PreReleaseVersion = preReleaseVersion;
-        }
+﻿namespace Arbor.NuGet.NuSpec.GlobalTool.CommandLine;
 
-        public string? SourceDirectory { get; }
-        public string? OutputFile { get; }
-        public string? PackageId { get; }
-        public string? PackageVersion { get; }
-        public string? VersionFile { get; }
-        public string? MsBuildVersionFile { get; }
-        public string? PackageDirectory { get; }
-        public string? PreReleaseVersion { get; }
-    }
+internal class CommandOptions(
+    string? sourceDirectory,
+    string? outputFile,
+    string? packageId,
+    string? packageVersion,
+    string? versionFile,
+    string? msBuildVersionFile,
+    string? packageDirectory,
+    string? preReleaseVersion = null)
+{
+    public string? SourceDirectory { get; } = sourceDirectory;
+    public string? OutputFile { get; } = outputFile;
+    public string? PackageId { get; } = packageId;
+    public string? PackageVersion { get; } = packageVersion;
+    public string? VersionFile { get; } = versionFile;
+    public string? MsBuildVersionFile { get; } = msBuildVersionFile;
+    public string? PackageDirectory { get; } = packageDirectory;
+    public string? PreReleaseVersion { get; } = preReleaseVersion;
 }

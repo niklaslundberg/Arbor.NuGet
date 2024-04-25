@@ -1,7 +1,5 @@
 ﻿using System;
-using System.CommandLine;
 using System.CommandLine.Builder;
-using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,72 +10,54 @@ using Arbor.Processing;
 using Serilog;
 using Zio;
 
-namespace Arbor.NuGet.NuSpec.GlobalTool.Application
+namespace Arbor.NuGet.NuSpec.GlobalTool.Application;
+
+public sealed class App(string[] args, ILogger logger, IFileSystem fileSystem, CancellationTokenSource cancellationTokenSource, bool leaveFileSystemOpen = false)
+    : IDisposable
 {
-    public sealed class App : IDisposable
+    public void Dispose()
     {
-        private readonly string[] _args;
-
-        private readonly CancellationTokenSource _cancellationTokenSource;
-        private readonly bool _leaveFileSystemOpen;
-
-        private readonly ILogger _logger;
-        private readonly IFileSystem _fileSystem;
-
-        public App(string[] args, ILogger logger, IFileSystem fileSystem, CancellationTokenSource cancellationTokenSource, bool leaveFileSystemOpen = false)
+        if (!leaveFileSystemOpen)
         {
-            _args = args;
-            _logger = logger;
-            _fileSystem = fileSystem;
-            _cancellationTokenSource = cancellationTokenSource;
-            _leaveFileSystemOpen = leaveFileSystemOpen;
+            fileSystem.Dispose();
         }
 
-        public void Dispose()
+        cancellationTokenSource.Dispose();
+    }
+
+    public async Task<ExitCode> ExecuteAsync()
+    {
+        try
         {
-            if (!_leaveFileSystemOpen)
+            var parser = CreateParser();
+
+            int exitCode;
+
+            using (var serilogAdapter = new SerilogAdapter(logger))
             {
-                _fileSystem.Dispose();
+                exitCode = await parser.InvokeAsync(args, serilogAdapter);
             }
 
-            _cancellationTokenSource.Dispose();
+            return new(exitCode);
         }
-
-        public async Task<ExitCode> ExecuteAsync()
+        catch (Exception ex) when (!ex.IsFatal())
         {
-            try
-            {
-                var parser = CreateParser();
-
-                int exitCode;
-
-                using (var serilogAdapter = new SerilogAdapter(_logger))
-                {
-                    exitCode = await parser.InvokeAsync(_args, serilogAdapter)
-                        .ConfigureAwait(continueOnCapturedContext: false);
-                }
-
-                return new ExitCode(exitCode);
-            }
-            catch (Exception ex) when (!ex.IsFatal())
-            {
-                _logger.Error(ex, "Could not create nuspec");
-                return ExitCode.Failure;
-            }
+            logger.Error(ex, "Could not create nuspec");
+            return ExitCode.Failure;
         }
+    }
 
-        private Parser CreateParser()
-        {
-            var parser = new CommandLineBuilder()
-                .AddCommand(NuSpecCommandDefinition.Tool(_logger, _fileSystem, _cancellationTokenSource.Token))
-                .AddCommand(NuSpecCommandDefinition.CreatePackage(_logger, _fileSystem, _cancellationTokenSource.Token))
-                .AddCommand(PackCommandDefinition.Tool(_logger, _fileSystem, _cancellationTokenSource.Token))
-                .AddCommand(PackageMetadataCommandDefinition.Tool(_logger, _fileSystem, _cancellationTokenSource.Token))
-                .UseVersionOption()
-                .UseHelp().UseParseDirective().UseDebugDirective().UseSuggestDirective().RegisterWithDotnetSuggest()
-                .UseParseErrorReporting().UseExceptionHandler().Build();
+    private Parser CreateParser()
+    {
+        var parser = new CommandLineBuilder()
+            .AddCommand(NuSpecCommandDefinition.Tool(logger, fileSystem, cancellationTokenSource.Token))
+            .AddCommand(NuSpecCommandDefinition.CreatePackage(logger, fileSystem, cancellationTokenSource.Token))
+            .AddCommand(PackCommandDefinition.Tool(logger, fileSystem, cancellationTokenSource.Token))
+            .AddCommand(PackageMetadataCommandDefinition.Tool(logger, fileSystem, cancellationTokenSource.Token))
+            .UseVersionOption()
+            .UseHelp().UseParseDirective().UseDebugDirective().UseSuggestDirective().RegisterWithDotnetSuggest()
+            .UseParseErrorReporting().UseExceptionHandler().Build();
 
-            return parser;
-        }
+        return parser;
     }
 }
