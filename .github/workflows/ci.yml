@@ -17,20 +17,20 @@ jobs:
         distribution: 'microsoft'
     - uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '9.0.x'
     - name: install-tools
       run: |
         dotnet tool install --global Arbor.Tooler.GlobalTool --version "*-*"
         dotnet tool install --global Arbor.Build.Bootstrapper --version "*-*"
     - name: Cache SonarCloud packages
-      uses: actions/cache@v1
+      uses: actions/cache@v4
       with:
         path: ~\sonar\cache
         key: ${{ runner.os }}-sonar
         restore-keys: ${{ runner.os }}-sonar
     - name: Cache SonarCloud scanner
       id: cache-sonar-scanner
-      uses: actions/cache@v1
+      uses: actions/cache@v4
       with:
         path: .\.sonar\scanner
         key: ${{ runner.os }}-sonar-scanner

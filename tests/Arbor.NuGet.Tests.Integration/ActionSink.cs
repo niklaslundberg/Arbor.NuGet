@@ -10,16 +10,10 @@ using Serilog.Formatting.Display;
 
 namespace Arbor.NuGet.Tests.Integration;
 
-public sealed class ActionSink : ILogEventSink, IDisposable
+public sealed class ActionSink(string outputTemplate = "{Message:l}") : ILogEventSink, IDisposable
 {
-    private readonly List<string> _logEvents;
-    private readonly MessageTemplateTextFormatter _formatter;
-
-    public ActionSink(string outputTemplate = "{Message:l}")
-    {
-        _formatter = new MessageTemplateTextFormatter(outputTemplate, CultureInfo.InvariantCulture);
-        _logEvents = [];
-    }
+    private readonly List<string> _logEvents = [];
+    private readonly MessageTemplateTextFormatter _formatter = new(outputTemplate, CultureInfo.InvariantCulture);
 
     public ImmutableArray<string> LogEvents => [.._logEvents];
 
