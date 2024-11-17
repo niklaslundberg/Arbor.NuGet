@@ -2,21 +2,14 @@
 
 namespace Arbor.NuGet.NuSpec.GlobalTool.NuGet;
 
-internal class NuGetPackageConfiguration
+internal class NuGetPackageConfiguration(
+    PackageDefinition packageDefinition,
+    DirectoryEntry sourceDirectory,
+    UPath outputFile)
 {
-    public NuGetPackageConfiguration(
-        PackageDefinition packageDefinition,
-        DirectoryEntry sourceDirectory,
-        UPath outputFile)
-    {
-        PackageDefinition = packageDefinition;
-        SourceDirectory = sourceDirectory;
-        OutputFile = outputFile;
-    }
+    public UPath OutputFile { get; } = outputFile;
 
-    public UPath OutputFile { get; }
+    public PackageDefinition PackageDefinition { get; } = packageDefinition;
 
-    public PackageDefinition PackageDefinition { get; }
-
-    public DirectoryEntry SourceDirectory { get; }
+    public DirectoryEntry SourceDirectory { get; } = sourceDirectory;
 }
