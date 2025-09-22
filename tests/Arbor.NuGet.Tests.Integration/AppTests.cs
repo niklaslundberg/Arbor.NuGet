@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Arbor.Aesculus.NCrunch;
 using Arbor.FS;
 using Arbor.NuGet.NuSpec.GlobalTool;
 using Arbor.NuGet.NuSpec.GlobalTool.Application;
@@ -237,6 +239,95 @@ public class AppTests(ITestOutputHelper testOutputHelper)
         Assert.Contains("contentFiles.json.sha512", filteredFiles);
         Assert.Contains("contentFiles.json", filteredFiles);
         Assert.Contains("Arbor.Sample.nuspec", filteredFiles);
+        bool containsBuildHost = filteredFiles.Any(file => file.Contains("BuildHost-"));
+        Assert.False(containsBuildHost);
+    }
+
+    [Fact]
+    public async Task WhenCreatingAPackageDirectlyFromPublishThenExitCodeShouldBe0()
+    {
+        using var cts = CreateCancellation();
+
+        using var fileSystem = new PhysicalFileSystem();
+        await using var sourceDirectory = TempDirectory.Create(fileSystem);
+
+        await fileSystem.WriteAllTextAsync(
+            UPath.Combine(sourceDirectory.Directory.FullName, "test.txt"),
+            "Hello world",
+            Encoding.UTF8,
+            cts.Token);
+
+        await using var targetDirectory = TempDirectory.Create(fileSystem);
+        await using var logger = CreateLogger();
+
+        await using var packageDirectory = TempDirectory.Create(fileSystem);
+
+        using var process = new Process();
+        var dotnetExe = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+            "dotnet", "dotnet.exe");
+
+        var currentPath = Path.Combine(VcsTestPathHelper.TryFindVcsRootPath(), "tests", "Sample");
+
+        process.StartInfo = new ProcessStartInfo(dotnetExe, ["publish", "-o", fileSystem.ConvertPathToInternal(sourceDirectory.Directory.Path)])
+        {
+            WorkingDirectory = currentPath
+        };
+
+        process.Start();
+        await process.WaitForExitAsync(cts.Token);
+
+        Assert.Equal(0, process.ExitCode);
+
+        FileEntry? builtDll = sourceDirectory.Directory.EnumerateFiles().SingleOrDefault(file => file.Name == "Arbor.Sample.dll");
+
+        Assert.NotNull(builtDll);
+
+        string[] args =
+        [
+            "package",
+            "create",
+            "--source-directory",
+            $"{sourceDirectory.Directory.FullName}",
+            "--package-id",
+            "Arbor.Sample",
+            "--package-version",
+            "1.2.3",
+            "--package-directory",
+            $"{packageDirectory.Directory.FullName}"
+        ];
+
+        using var app = new App(args, CreateLogger(), fileSystem, cts, leaveFileSystemOpen: true);
+        int exitCode = await app.ExecuteAsync();
+
+        Assert.Equal(expected: 0, exitCode);
+
+        Assert.True(packageDirectory.Directory.Exists);
+        var packagePath = packageDirectory.Directory.Path / "Arbor.Sample.1.2.3.nupkg";
+
+        Assert.True(fileSystem.FileExists(packagePath), $"File.Exists(packagePath) {{'{packagePath}'}}");
+        await using var packageStream = fileSystem.OpenFile(packagePath, FileMode.Open, FileAccess.Read);
+        string[] files;
+
+        using (var reader = new PackageArchiveReader(packageStream))
+        {
+            files = reader.GetFiles().ToArray();
+        }
+
+        string[] filteredFiles = files
+            .Where(file => !file.StartsWith('[')
+                           && !file.StartsWith('_')
+                           && !file.StartsWith("package/"))
+            .ToArray();
+
+        logger.Information("Files in package: @{Files}", filteredFiles);
+
+        Assert.Contains("Content/Arbor.Sample.dll", filteredFiles);
+        Assert.Contains("contentFiles.json.sha512", filteredFiles);
+        Assert.Contains("contentFiles.json", filteredFiles);
+        Assert.Contains("Arbor.Sample.nuspec", filteredFiles);
+        bool containsBuildHost = filteredFiles.Any(file => file.Contains("BuildHost-"));
+        Assert.False(containsBuildHost);
     }
 
     [Fact]
