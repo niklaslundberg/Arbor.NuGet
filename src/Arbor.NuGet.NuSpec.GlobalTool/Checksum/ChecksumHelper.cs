@@ -15,9 +15,11 @@ internal static class ChecksumHelper
 {
     public static async Task<FileListWithChecksumFile> CreateFileListForDirectory(
         DirectoryEntry baseDirectory,
-        DirectoryEntry targetDirectory)
+        DirectoryEntry targetDirectory,
+        Predicate<FileEntry> filter)
     {
         var fileEntries = baseDirectory.EnumerateFiles("*", SearchOption.AllDirectories)
+            .Where(file => filter(file))
             .OrderBy(file => file.FullName)
             .Select(file => file);
 
@@ -58,13 +60,11 @@ internal static class ChecksumHelper
         var hashTargetPath = UPath.Combine(targetDirectory.FullName, hashFileName);
         hashFile.CopyTo(hashTargetPath, overwrite: true);
 
-        string? contentFilesFileName = contentFilesFile.Name;
+        string contentFilesFileName = contentFilesFile.Name;
         var contentFilesTargetPath = UPath.Combine(targetDirectory.FullName, contentFilesFileName);
         contentFilesFile.CopyTo(contentFilesTargetPath, overwrite: true);
 
-        var fileListWithChecksumFile = new FileListWithChecksumFile(contentFilesFileName, hashFileName);
-
-        return fileListWithChecksumFile;
+        return new(contentFilesFileName, hashFileName);
     }
 
     private static async Task<string> GetFileHashSha512Base64Encoded(FileEntry fileName)

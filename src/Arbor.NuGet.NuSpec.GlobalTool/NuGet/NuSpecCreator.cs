@@ -33,8 +33,7 @@ internal sealed class NuSpecCreator
         var nuGetPackageConfiguration =
             new NuGetPackageConfiguration(packageDefinition, sourceDirectory, outputFile);
 
-        var exitCode = await nuSpecCreator.CreateNuGetPackageAsync(nuGetPackageConfiguration, cancellationToken)
-            ;
+        var exitCode = await nuSpecCreator.CreateNuGetPackageAsync(nuGetPackageConfiguration, cancellationToken);
 
         return exitCode.Code;
     }
@@ -66,7 +65,7 @@ internal sealed class NuSpecCreator
         }
 
         string packageId = packageConfiguration.PackageDefinition.PackageId.Id;
-        string? normalizedVersion = packageConfiguration.PackageDefinition.SemanticVersion.ToNormalizedString();
+        string normalizedVersion = packageConfiguration.PackageDefinition.SemanticVersion.ToNormalizedString();
         string description = packageId;
         string summary = packageId;
         const string language = "en-US";
@@ -77,7 +76,10 @@ internal sealed class NuSpecCreator
         const string copyright = "Undefined";
         string tags = string.Empty;
 
-        var fileList = packageDirectory.EnumerateFiles("*", SearchOption.AllDirectories);
+        bool Filter(FileEntry entry) => !entry.FullName.Contains("BuildHost-");
+
+        var fileList = packageDirectory.EnumerateFiles("*", SearchOption.AllDirectories)
+            .Where(Filter);
 
         string files = string.Join(
             Environment.NewLine,
@@ -89,8 +91,7 @@ internal sealed class NuSpecCreator
 
         targetDirectory.EnsureExists();
 
-        var contentFilesInfo = await ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory)
-            ;
+        var contentFilesInfo = await ChecksumHelper.CreateFileListForDirectory(packageDirectory, targetDirectory, Filter);
 
         string contentFileListFile =
             $@"<file src=""{contentFilesInfo.ContentFilesFile}"" target=""{contentFilesInfo.ContentFilesFile}"" />";
@@ -145,8 +146,7 @@ internal sealed class NuSpecCreator
         tempDir.Directory.FileSystem.DeleteFile(nuspecTempFile);
 
         await tempDir.Directory.FileSystem
-            .WriteAllTextAsync(nuspecTempFile, nuspecContent, Encoding.UTF8, cancellationToken)
-            ;
+            .WriteAllTextAsync(nuspecTempFile, nuspecContent, Encoding.UTF8, cancellationToken);
 
         var tempFile = tempDir.Directory.FileSystem.GetFileEntry(nuspecTempFile);
         tempFile.CopyTo(packageConfiguration.OutputFile, overwrite: true);

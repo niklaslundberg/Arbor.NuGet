@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build:
 
-    runs-on: windows-2022
+    runs-on: windows-2025
 
     steps:
     - uses: actions/checkout@v4
@@ -50,12 +50,3 @@ jobs:
         Arbor.Build.NuGet.PackageUpload.ForceUploadEnabled: "true"
       run: |
         build\build.bat
-    - name: Start sonar
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      shell: powershell
-      run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"niklaslundberg_Arbor.NuGet" /o:"niklaslundberg" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
-          dotnet build Arbor.NuGet.sln
-          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
