@@ -17,7 +17,8 @@ internal static class NuSpecHelper
 
         string internalTargetPath = file.FileSystem.ConvertPathToInternal(file.Path);
 
-        string targetFilePath = internalTargetPath[file.FileSystem.ConvertPathToInternal(baseDirectory.Path).Length..];
+        string targetFilePath = internalTargetPath[file.FileSystem.ConvertPathToInternal(baseDirectory.Path).Length..]
+            .TrimStart('/', '\\');
 
         string fileItem = $@"<file src=""{internalTargetPath}"" target=""Content{Path.DirectorySeparatorChar}{targetFilePath}"" />";
 

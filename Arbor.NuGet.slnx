@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".github/workflows/ci.yml" />
+    <File Path=".gitignore" />
+    <File Path="build/build.bat" />
+    <File Path="Directory.Build.props" />
+    <File Path="global.json" />
+    <File Path="LICENSE.txt" />
+    <File Path="NuGet.config" />
+    <File Path="README.md" />
+    <File Path="version.json" />
+  </Folder>
+  <Project Path="src/Arbor.NuGet.NuSpec.GlobalTool/Arbor.NuGet.NuSpec.GlobalTool.csproj" />
+  <Project Path="tests/Arbor.NuGet.Tests.Integration/Arbor.NuGet.Tests.Integration.csproj" />
+</Solution>

@@ -1,0 +1,24 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Arbor.Aesculus.NCrunch" Version="3.9.0" />
+    <PackageVersion Include="Arbor.FileSystem" Version="0.6.0" />
+    <PackageVersion Include="Arbor.KVConfiguration.Core" Version="3.0.0" />
+    <PackageVersion Include="Arbor.KVConfiguration.JsonConfiguration" Version="3.0.0" />
+    <PackageVersion Include="Arbor.Processing" Version="0.6.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Compilers" Version="5.12.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.12.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="5.12.0" />
+    <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.12.1" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageVersion Include="NuGet.Packaging" Version="8.0.0" />
+    <PackageVersion Include="NuGet.Versioning" Version="8.0.0" />
+    <PackageVersion Include="Serilog" Version="4.4.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.37.0.15768" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta1.20574.7" />
+    <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.3" />
+  </ItemGroup>
+</Project>
