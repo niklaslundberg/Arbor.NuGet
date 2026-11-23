@@ -13,7 +13,6 @@ using NuGet.Packaging;
 using Serilog;
 using Serilog.Core;
 using Xunit;
-using Xunit.Abstractions;
 using Zio;
 using Zio.FileSystems;
 
@@ -263,9 +262,7 @@ public class AppTests(ITestOutputHelper testOutputHelper)
         await using var packageDirectory = TempDirectory.Create(fileSystem);
 
         using var process = new Process();
-        var dotnetExe = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-            "dotnet", "dotnet.exe");
+        var dotnetExe = "dotnet";
 
         var currentPath = Path.Combine(VcsTestPathHelper.TryFindVcsRootPath(), "tests", "Sample");
 
